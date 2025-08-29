@@ -1,0 +1,47 @@
+/* Message input container */
+.message-input {
+  background: #fff;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  border-top: 1px solid #ddd;
+}
+
+/* Input field */
+.message-input input {
+  border: none;
+  outline: none;
+  flex: 1;
+  font-size: 15px;
+  padding: 10px 12px;
+  border-radius: 20px;
+  background: #f1f1f1;
+  transition: background 0.2s ease;
+}
+
+.message-input input:focus {
+  background: #eaeaea;
+}
+
+/* Send button */
+.message-input button {
+  margin-left: 10px;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #007bff;
+  border: none;
+  transition: background 0.2s ease;
+}
+
+.message-input button:hover {
+  background: #0056b3;
+}
+
+.message-input svg {
+  color: white;
+  font-size: 18px;
+}
