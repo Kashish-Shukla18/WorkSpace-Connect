@@ -1,3 +1,4 @@
+import { API_BASE_URL } from './config';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from './Layout';
@@ -18,7 +19,7 @@ const EmployeeDetails = () => {
     const fetchEmployee = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get(`http://172.24.109.63:5000/api/employees/${id}`, {
+            const response = await axios.get(`${API_BASE_URL}/api/employees/${id}`, {
                 headers: { Authorization: token }
             });
             setEmployee(response.data.employee);

@@ -1,3 +1,4 @@
+import { API_BASE_URL } from './config';
 import React, { useState, useEffect } from 'react';
 import Header from './Header';
 import Sidebar from './Sidebar';
@@ -13,7 +14,7 @@ const Layout = ({ children }) => {
     const fetchCurrentUser = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('http://localhost:5000/api/current-user', {
+        const response = await axios.get(`${API_BASE_URL}/api/current-user`, {
           headers: { Authorization: token }
         });
         setCurrentUser(response.data);

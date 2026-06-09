@@ -1,3 +1,4 @@
+import { API_BASE_URL } from './config';
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Layout from "./Layout";
@@ -27,7 +28,7 @@ export default function WishesPage() {
                 setDebugInfo(prev => ({ ...prev, tokenStatus: "Token present" }));
 
                 console.log("🌐 Making API request to employees endpoint...");
-                const res = await axios.get("http://172.24.109.63:5000/api/employees", {
+                const res = await axios.get(`${API_BASE_URL}/api/employees`, {
                     headers: { Authorization: token }
                 });
 
@@ -87,7 +88,7 @@ export default function WishesPage() {
             }
 
             const response = await axios.post(
-                "http://172.24.109.63:5000/send-email",
+                `${API_BASE_URL}/send-email`,
                 { to: email, subject: "🎂 Happy Birthday!", text },
                 { headers: { Authorization: token } }
             );

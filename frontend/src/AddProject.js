@@ -1,3 +1,4 @@
+import { API_BASE_URL } from './config';
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -15,7 +16,7 @@ function AddProject() {
         if (!token) return navigate('/login');
 
         try {
-            await axios.post('http://172.24.109.63:5000/projects', { name, description }, {
+            await axios.post(`${API_BASE_URL}/projects`, { name, description }, {
                 headers: { Authorization: token }
             });
             alert('Project added successfully!');

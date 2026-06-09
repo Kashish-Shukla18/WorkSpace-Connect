@@ -1,3 +1,4 @@
+import { API_BASE_URL } from './config';
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -13,7 +14,7 @@ function ProjectsList() {
         const token = localStorage.getItem('token');
         if (!token) return navigate('/login');
 
-        axios.get('http://172.24.109.63:5000/projects', {
+        axios.get(`${API_BASE_URL}/projects`, {
             headers: { Authorization: token }
         })
         .then(res => {

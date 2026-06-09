@@ -1,3 +1,4 @@
+import { API_BASE_URL } from './config';
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
@@ -16,7 +17,7 @@ function Login() {
         setError('');
         
         try {
-            const res = await axios.post('http://172.24.109.63:5000/login', { username, password });
+            const res = await axios.post(`${API_BASE_URL}/login`, { username, password });
             localStorage.setItem('token', res.data.token);
             
             navigate('/dashboard');

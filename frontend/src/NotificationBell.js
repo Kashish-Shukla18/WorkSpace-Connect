@@ -1,3 +1,4 @@
+import { API_BASE_URL } from './config';
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import io from 'socket.io-client';
@@ -37,7 +38,7 @@ function NotificationBell({ currentUser }) {
   useEffect(() => {
     if (currentUser && token) {
       console.log('🔔 Connecting to Socket.io server...');
-      const socket = io('http://172.24.109.63:5000', {
+      const socket = io(`${API_BASE_URL}`, {
         auth: { token }
       });
 
@@ -232,7 +233,7 @@ function NotificationBell({ currentUser }) {
   const fetchNotifications = async () => {
     console.log('📡 Fetching notifications...');
     try {
-      const res = await axios.get('http://172.24.109.63:5000/api/notifications', {
+      const res = await axios.get(`${API_BASE_URL}/api/notifications`, {
         headers: { Authorization: token }
       });
       const newNotifications = res.data;
@@ -250,7 +251,7 @@ function NotificationBell({ currentUser }) {
 
   const markAsRead = async (id) => {
     try {
-      await axios.patch(`http://172.24.109.63:5000/api/notifications/${id}/read`, {}, {
+      await axios.patch(`${API_BASE_URL}/api/notifications/${id}/read`, {}, {
         headers: { Authorization: token }
       });
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
@@ -262,7 +263,7 @@ function NotificationBell({ currentUser }) {
 
   const markAllAsRead = async () => {
     try {
-      await axios.patch('http://172.24.109.63:5000/api/notifications/read-all', {}, {
+      await axios.patch(`${API_BASE_URL}/api/notifications/read-all`, {}, {
         headers: { Authorization: token }
       });
       setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));

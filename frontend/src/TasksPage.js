@@ -1,3 +1,4 @@
+import { API_BASE_URL } from './config';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './TasksPage.css';
@@ -16,7 +17,7 @@ const TasksPage = () => {
     const fetchTasks = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get('http://172.24.109.63:5000/api/tasks/assigned', {
+            const response = await axios.get(`${API_BASE_URL}/api/tasks/assigned`, {
                 headers: { Authorization: token }
             });
             setTasks(response.data.tasks);
@@ -31,7 +32,7 @@ const TasksPage = () => {
     const updateTaskStatus = async (taskId, newStatus) => {
         try {
             const token = localStorage.getItem('token');
-            await axios.patch(`http://172.24.109.63:5000/api/tasks/${taskId}/status`, 
+            await axios.patch(`${API_BASE_URL}/api/tasks/${taskId}/status`, 
                 { status: newStatus },
                 { headers: { Authorization: token } }
             );

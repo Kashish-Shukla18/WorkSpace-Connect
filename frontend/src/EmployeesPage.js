@@ -1,3 +1,4 @@
+import { API_BASE_URL } from './config';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; // Add this import
 import Layout from './Layout';
@@ -35,7 +36,7 @@ const EmployeesPage = () => {
                 ...filters
             });
 
-            const response = await axios.get(`http://172.24.109.63:5000/api/employees?${params}`, {
+            const response = await axios.get(`${API_BASE_URL}/api/employees?${params}`, {
                 headers: { Authorization: token }
             });
 

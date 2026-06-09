@@ -1,3 +1,4 @@
+import { API_BASE_URL } from './config';
 import React, { useState, useEffect } from "react";
 import DiscussionRoomList from "./DiscussionRoomList";
 import RoomChat from "./RoomChat";
@@ -30,7 +31,7 @@ function DiscussionRoomPage({ currentUser, socket }) {
     try {
       console.log(`🌐 Fetching details for room ${selectedRoom.id}`);
       const res = await axios.get(
-        `http://172.24.109.63:5000/api/rooms/${selectedRoom.id}`,
+        `${API_BASE_URL}/api/rooms/${selectedRoom.id}`,
         { headers: { Authorization: token } }
       );
       console.log("✅ Room details:", res.data);
@@ -63,7 +64,7 @@ function DiscussionRoomPage({ currentUser, socket }) {
     try {
       console.log(`📤 Adding user ${newUserEmail} to room ${selectedRoom.id}`);
       const res = await axios.post(
-        `http://172.24.109.63:5000/api/rooms/${selectedRoom.id}/add-user`,
+        `${API_BASE_URL}/api/rooms/${selectedRoom.id}/add-user`,
         { email: newUserEmail },
         { headers: { Authorization: token } }
       );

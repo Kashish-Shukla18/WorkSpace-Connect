@@ -1,3 +1,4 @@
+import { API_BASE_URL } from './config';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -22,10 +23,10 @@ function CreateTask() {
 
         // Fetch users and projects
         Promise.all([
-            axios.get('http://172.24.109.63:5000/users', {
+            axios.get(`${API_BASE_URL}/users`, {
                 headers: { Authorization: token }
             }),
-            axios.get('http://172.24.109.63:5000/projects', {
+            axios.get(`${API_BASE_URL}/projects`, {
                 headers: { Authorization: token }
             })
         ])
@@ -48,7 +49,7 @@ function CreateTask() {
         }
 
         try {
-            await axios.post('http://172.24.109.63:5000/tasks', {
+            await axios.post(`${API_BASE_URL}/tasks`, {
                 title,
                 description,
                 due_date: dueDate,

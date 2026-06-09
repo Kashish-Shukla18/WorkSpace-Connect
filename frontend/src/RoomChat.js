@@ -1,3 +1,4 @@
+import { API_BASE_URL } from './config';
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import "./RoomChat.css";
@@ -25,7 +26,7 @@ function RoomChat({ room, currentUser, socket }) {
     try {
       console.log(`🌐 Fetching messages for room ${room.id}`);
       const res = await axios.get(
-        `http://172.24.109.63:5000/api/rooms/${room.id}/messages`,
+        `${API_BASE_URL}/api/rooms/${room.id}/messages`,
         { headers: { Authorization: token } }
       );
       console.log(`✅ Retrieved ${res.data.length} messages`);

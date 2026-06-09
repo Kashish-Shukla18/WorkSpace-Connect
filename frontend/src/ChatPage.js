@@ -1,3 +1,4 @@
+import { API_BASE_URL } from './config';
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import io from "socket.io-client";
@@ -6,7 +7,7 @@ import ChatWindow from "./ChatWindow";
 import Layout from "./Layout";
 
 
-const socket = io("http://172.24.109.63:5000"); // backend
+const socket = io(`${API_BASE_URL}`); // backend
 
 function ChatPage() {
   const [users, setUsers] = useState([]);
@@ -26,7 +27,7 @@ function ChatPage() {
     });
 
     // fetch users
-    axios.get("http://172.24.109.63:5000/users", {
+    axios.get(`${API_BASE_URL}/users`, {
       headers: { Authorization: token }
     })
     .then(res => setUsers(res.data))
@@ -39,7 +40,7 @@ function ChatPage() {
 
   const fetchMessages = async (userId) => {
   try {
-    const res = await axios.get(`http://172.24.109.63:5000/messages/${userId}`, {
+    const res = await axios.get(`${API_BASE_URL}/messages/${userId}`, {
       headers: { Authorization: token }
     });
     console.log("Fetched messages:", res.data);

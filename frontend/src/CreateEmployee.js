@@ -1,3 +1,4 @@
+import { API_BASE_URL } from './config';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from './Layout';
@@ -45,7 +46,7 @@ const CreateEmployee = () => {
 
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.post('http://172.24.109.63:5000/api/employees', formData, {
+            const response = await axios.post(`${API_BASE_URL}/api/employees`, formData, {
                 headers: { Authorization: token }
             });
 

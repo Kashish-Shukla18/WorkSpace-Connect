@@ -1,3 +1,4 @@
+import { API_BASE_URL } from './config';
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./DiscussionRoomList.css";
@@ -26,7 +27,7 @@ function DiscussionRoomList({ onSelect, selectedRoom, currentUser }) {
     }
     try {
       console.log("🌐 Making API request to /api/rooms");
-      const res = await axios.get("http://172.24.109.63:5000/api/rooms", {
+      const res = await axios.get(`${API_BASE_URL}/api/rooms`, {
         headers: { Authorization: token },
       });
 
@@ -61,7 +62,7 @@ function DiscussionRoomList({ onSelect, selectedRoom, currentUser }) {
     try {
       console.log("📤 Creating room with name:", newRoom);
       const res = await axios.post(
-        "http://172.24.109.63:5000/api/rooms",
+        `${API_BASE_URL}/api/rooms`,
         { name: newRoom, description: "" },
         { headers: { Authorization: token } }
       );

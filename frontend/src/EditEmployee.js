@@ -1,3 +1,4 @@
+import { API_BASE_URL } from './config';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from './Layout';
@@ -47,10 +48,10 @@ const EditEmployee = () => {
 
             // Fetch departments and roles for dropdowns
             const [deptResponse, rolesResponse] = await Promise.all([
-                axios.get('http://172.24.109.63:5000/api/departments', {
+                axios.get(`${API_BASE_URL}/api/departments`, {
                     headers: { Authorization: `Bearer ${token}` }
                 }),
-                axios.get('http://172.24.109.63:5000/api/roles', {
+                axios.get(`${API_BASE_URL}/api/roles`, {
                     headers: { Authorization: `Bearer ${token}` }
                 })
             ]);
@@ -73,7 +74,7 @@ const EditEmployee = () => {
                 return;
             }
 
-            const response = await axios.get(`http://172.24.109.63:5000/api/employees/${id}`, {
+            const response = await axios.get(`${API_BASE_URL}/api/employees/${id}`, {
                 headers: { 
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -157,7 +158,7 @@ const EditEmployee = () => {
                 role_id: formData.role_id ? parseInt(formData.role_id) : null
             };
 
-            const response = await axios.put(`http://172.24.109.63:5000/api/employees/${id}`, updateData, {
+            const response = await axios.put(`${API_BASE_URL}/api/employees/${id}`, updateData, {
                 headers: { 
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'application/json'

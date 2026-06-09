@@ -1,3 +1,4 @@
+import { API_BASE_URL } from './config';
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
@@ -41,7 +42,7 @@ function Register() {
         setIsLoading(true);
         
         try {
-            await axios.post('http://172.24.109.63:5000/register', {
+            await axios.post(`${API_BASE_URL}/register`, {
                 username: formData.username,
                 email: formData.email,
                 password: formData.password

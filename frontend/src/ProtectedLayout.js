@@ -1,3 +1,4 @@
+import { API_BASE_URL } from './config';
 import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import io from 'socket.io-client';
@@ -50,13 +51,13 @@ useEffect(() => {
     const initializeApp = async () => {
       try {
         // Fetch current user
-        const userRes = await axios.get('http://172.24.109.63:5000/api/current-user', {
+        const userRes = await axios.get(`${API_BASE_URL}/api/current-user`, {
           headers: { Authorization: token }
         });
         setCurrentUser(userRes.data);
 
         // Create socket and authenticate immediately
-        const newSocket = io("http://172.24.109.63:5000");
+        const newSocket = io(`${API_BASE_URL}`);
         
         newSocket.on('connect', () => {
           console.log('Socket connected, sending authentication...');
