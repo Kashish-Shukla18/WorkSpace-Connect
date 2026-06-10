@@ -15,8 +15,8 @@ app.use(bodyParser.json());
 // PostgreSQL connection
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL || `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`,
-  ssl: process.env.DATABASE_URL && !process.env.DATABASE_URL.includes("localhost") 
-    ? { rejectUnauthorized: false } 
+  ssl: process.env.DATABASE_URL && !process.env.DATABASE_URL.includes("localhost")
+    ? { rejectUnauthorized: false }
     : false
 });
 const nodemailer = require('nodemailer');
@@ -572,7 +572,7 @@ app.post('/api/rooms', authMiddleware, async (req, res) => {
       );
 
       await client.query('COMMIT');
-      
+
       // Get the room with creator info
       const finalRoomResult = await pool.query(
         `SELECT r.*, u.username as created_by_name 
@@ -581,7 +581,7 @@ app.post('/api/rooms', authMiddleware, async (req, res) => {
          WHERE r.id = $1`,
         [room.id]
       );
-      
+
       res.json(finalRoomResult.rows[0]);
     } catch (err) {
       await client.query('ROLLBACK');
@@ -644,7 +644,7 @@ app.post('/api/rooms/:roomId/add-user', authMiddleware, async (req, res) => {
       [roomId, userId]
     );
 
-    res.json({ 
+    res.json({
       message: "User added to room successfully",
       user: { id: userId, username, email }
     });
@@ -809,7 +809,7 @@ app.get('/api/notification-preferences', authMiddleware, async (req, res) => {
 app.put('/api/notification-preferences', authMiddleware, async (req, res) => {
   try {
     const { email_notifications, push_notifications, desktop_notifications, sound_enabled } = req.body;
-    
+
     const result = await pool.query(`
       INSERT INTO user_notification_preferences 
         (user_id, email_notifications, push_notifications, desktop_notifications, sound_enabled)
@@ -822,7 +822,7 @@ app.put('/api/notification-preferences', authMiddleware, async (req, res) => {
         sound_enabled = $5
       RETURNING *
     `, [req.userId, email_notifications, push_notifications, desktop_notifications, sound_enabled]);
-    
+
     res.json(result.rows[0]);
   } catch (err) {
     console.error("Error updating preferences:", err);
@@ -842,9 +842,9 @@ const createNotification = async (userId, type, title, message, relatedId = null
        RETURNING *`,
       [userId, type, title, message, relatedId, relatedType]
     );
-    
+
     const notification = result.rows[0];
-    
+
     // Emit real-time notification
     if (onlineUsers[userId]) {
       io.to(onlineUsers[userId]).emit('newNotification', notification);
@@ -852,7 +852,7 @@ const createNotification = async (userId, type, title, message, relatedId = null
         count: await getUnreadCount(userId)
       });
     }
-    
+
     return notification;
   } catch (err) {
     console.error("Error creating notification:", err);
@@ -872,18 +872,18 @@ const checkForMentions = async (message, roomId, senderId) => {
   const mentionRegex = /@(\w+)/g;
   let match;
   const mentions = [];
-  
+
   while ((match = mentionRegex.exec(message)) !== null) {
     mentions.push(match[1]);
   }
-  
+
   for (const username of mentions) {
     try {
       const userResult = await pool.query(
         'SELECT id FROM users WHERE username = $1',
         [username]
       );
-      
+
       if (userResult.rows.length > 0) {
         const mentionedUserId = userResult.rows[0].id;
         await createNotification(
@@ -929,7 +929,7 @@ io.on("connection", (socket) => {
       onlineUsers[userId] = socket.id;
       socket.userId = userId;
       console.log(`User ${userId} authenticated on socket ${socket.id}`);
-      
+
       // Emit success event back to client
       socket.emit("authenticated", { userId });
     } catch (err) {
@@ -974,55 +974,55 @@ io.on("connection", (socket) => {
 
   // Handle sending room message
   // Handle sending room message
-socket.on("sendRoomMessage", async ({ roomId, message }) => {
-  console.log("💬 sendRoomMessage received:", { roomId, userId: socket.userId, message });
+  socket.on("sendRoomMessage", async ({ roomId, message }) => {
+    console.log("💬 sendRoomMessage received:", { roomId, userId: socket.userId, message });
 
-  if (!socket.userId) {
-    console.error("❌ No socket.userId, message not saved");
-    return;
-  }
-
-  try {
-    const result = await pool.query(
-      "INSERT INTO room_messages (room_id, sender_id, message) VALUES ($1, $2, $3) RETURNING *",
-      [roomId, socket.userId, message]
-    );
-    const savedMessage = result.rows[0];
-
-    // Fetch sender name
-    const userResult = await pool.query(
-      "SELECT username FROM users WHERE id = $1",
-      [socket.userId]
-    );
-    if (userResult.rows.length > 0) {
-      savedMessage.sender_name = userResult.rows[0].username;
+    if (!socket.userId) {
+      console.error("❌ No socket.userId, message not saved");
+      return;
     }
 
-    // Check for mentions
-    await checkForMentions(message, roomId, socket.userId);
-
-    // Send notification to all room participants except sender
-    const participants = await pool.query(
-      'SELECT user_id FROM room_participants WHERE room_id = $1 AND user_id != $2',
-      [roomId, socket.userId]
-    );
-
-    for (const participant of participants.rows) {
-      await createNotification(
-        participant.user_id,
-        'message',
-        'New message',
-        `New message in room ${roomId}`,
-        roomId,
-        'room'
+    try {
+      const result = await pool.query(
+        "INSERT INTO room_messages (room_id, sender_id, message) VALUES ($1, $2, $3) RETURNING *",
+        [roomId, socket.userId, message]
       );
-    }
+      const savedMessage = result.rows[0];
 
-    io.to(`room_${roomId}`).emit("receiveRoomMessage", savedMessage);
-  } catch (err) {
-    console.error("Error saving room message:", err);
-  }
-});
+      // Fetch sender name
+      const userResult = await pool.query(
+        "SELECT username FROM users WHERE id = $1",
+        [socket.userId]
+      );
+      if (userResult.rows.length > 0) {
+        savedMessage.sender_name = userResult.rows[0].username;
+      }
+
+      // Check for mentions
+      await checkForMentions(message, roomId, socket.userId);
+
+      // Send notification to all room participants except sender
+      const participants = await pool.query(
+        'SELECT user_id FROM room_participants WHERE room_id = $1 AND user_id != $2',
+        [roomId, socket.userId]
+      );
+
+      for (const participant of participants.rows) {
+        await createNotification(
+          participant.user_id,
+          'message',
+          'New message',
+          `New message in room ${roomId}`,
+          roomId,
+          'room'
+        );
+      }
+
+      io.to(`room_${roomId}`).emit("receiveRoomMessage", savedMessage);
+    } catch (err) {
+      console.error("Error saving room message:", err);
+    }
+  });
 
 
   socket.on("disconnect", () => {
