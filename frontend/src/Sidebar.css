@@ -15,7 +15,7 @@
 
 .sidebar {
     width: 280px;
-    background: #2c3e50 !important;
+    background: #18181b !important;
     color: white;
     position: fixed;
     top: 60px;
@@ -35,11 +35,11 @@
 
 .sidebar-header {
     padding: 20px;
-    border-bottom: 1px solid #34495e;
+    border-bottom: 1px solid #27272a;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #1a2530;
+    background: #09090b;
 }
 
 .sidebar-header h3 {
@@ -87,12 +87,12 @@
 }
 
 .sidebar-link:hover {
-    background-color: #34495e;
-    border-left-color: #3498db;
+    background-color: #27272a;
+    border-left-color: #3b82f6;
 }
 
 .sidebar-link.active {
-    background-color: #3498db;
+    background-color: #3b82f6;
     border-left-color: #ecf0f1;
 }
 
@@ -110,8 +110,8 @@
 
 .sidebar-footer {
     padding: 20px;
-    border-top: 1px solid #34495e;
-    background: #1a2530;
+    border-top: 1px solid #27272a;
+    background: #09090b;
 }
 
 .user-info {
