@@ -1,1 +1,1 @@
-export const API_BASE_URL = process.env.REACT_APP_API_URL || "https://workspace-connect-backend.onrender.com";
+export const API_BASE_URL = "https://workspace-connect-backend.onrender.com";
