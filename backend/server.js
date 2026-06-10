@@ -19,6 +19,11 @@ const pool = new Pool({
     ? { rejectUnauthorized: false }
     : false
 });
+
+// Catch unhandled errors on the pool to prevent server crashes
+pool.on('error', (err, client) => {
+  console.error('Unexpected error on idle PostgreSQL client', err);
+});
 const nodemailer = require('nodemailer');
 
 // Create transporter
