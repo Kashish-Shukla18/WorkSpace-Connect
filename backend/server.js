@@ -24,20 +24,20 @@ const pool = new Pool({
 pool.on('error', (err, client) => {
   console.error('Unexpected error on idle PostgreSQL client', err);
 });
-const nodemailer = require('nodemailer');
+// const nodemailer = require('nodemailer');
 
-// Create transporter
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
-transporter.verify((err, success) => {
-  if (err) console.error("Email transporter error:", err);
-  else console.log("Email transporter ready");
-});
+// // Create transporter
+// const transporter = nodemailer.createTransport({
+//   service: 'gmail',
+//   auth: {
+//     user: process.env.EMAIL_USER,
+//     pass: process.env.EMAIL_PASS
+//   }
+// });
+// transporter.verify((err, success) => {
+//   if (err) console.error("Email transporter error:", err);
+//   else console.log("Email transporter ready");
+// });
 
 // Test route
 app.get('/', (req, res) => {
