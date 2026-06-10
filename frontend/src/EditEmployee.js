@@ -39,6 +39,7 @@ const EditEmployee = () => {
     useEffect(() => {
         fetchEmployee();
         fetchDropdownData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
     const fetchDropdownData = async () => {
