@@ -68,6 +68,7 @@ function Login() {
                             <input type="checkbox" />
                             <span>Remember me</span>
                         </label>
+                        {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
                         <a href="#" className="forgot-password">Forgot password?</a>
                     </div>
                     

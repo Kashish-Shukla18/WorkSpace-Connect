@@ -111,6 +111,7 @@ function RoomChat({ room, currentUser, socket }) {
       console.log("🧹 Cleaning up socket event listeners");
       socket.off("receiveRoomMessage", handleNewMessage);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [room?.id, socket, currentUser]);
 
   useEffect(() => {

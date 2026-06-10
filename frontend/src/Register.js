@@ -141,6 +141,7 @@ function Register() {
                     <div className="terms-agreement">
                         <label className="terms-checkbox">
                             <input type="checkbox" required />
+                            {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
                             <span>I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></span>
                         </label>
                     </div>

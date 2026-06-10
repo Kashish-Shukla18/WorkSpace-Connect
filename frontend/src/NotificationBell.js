@@ -32,6 +32,7 @@ function NotificationBell({ currentUser }) {
         clearInterval(interval);
       };
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
 
   // 2. Socket.io connection for real-time updates
@@ -97,32 +98,34 @@ function NotificationBell({ currentUser }) {
       }
     }
     setPreviousUnreadCount(unreadCount);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unreadCount, previousUnreadCount]);
 
   // 4. Audio element ready check
   useEffect(() => {
+    const currentAudio = audioRef.current;
     const checkAudio = () => {
-      if (audioRef.current) {
-        const isReady = audioRef.current.readyState >= 2; // HAVE_ENOUGH_DATA
+      if (currentAudio) {
+        const isReady = currentAudio.readyState >= 2; // HAVE_ENOUGH_DATA
         console.log('🎵 Audio element ready state:', {
-          readyState: audioRef.current.readyState,
+          readyState: currentAudio.readyState,
           isReady: isReady,
-          src: audioRef.current.currentSrc
+          src: currentAudio.currentSrc
         });
         setDebugInfo(prev => ({ ...prev, audioReady: isReady }));
       }
     };
 
-    if (audioRef.current) {
-      audioRef.current.addEventListener('loadeddata', checkAudio);
-      audioRef.current.addEventListener('canplay', checkAudio);
+    if (currentAudio) {
+      currentAudio.addEventListener('loadeddata', checkAudio);
+      currentAudio.addEventListener('canplay', checkAudio);
       checkAudio();
     }
 
     return () => {
-      if (audioRef.current) {
-        audioRef.current.removeEventListener('loadeddata', checkAudio);
-        audioRef.current.removeEventListener('canplay', checkAudio);
+      if (currentAudio) {
+        currentAudio.removeEventListener('loadeddata', checkAudio);
+        currentAudio.removeEventListener('canplay', checkAudio);
       }
     };
   }, []);

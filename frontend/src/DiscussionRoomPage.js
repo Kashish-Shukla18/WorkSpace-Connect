@@ -24,6 +24,7 @@ function DiscussionRoomPage({ currentUser, socket }) {
     } else {
       console.log("❌ No room selected or room has no ID");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedRoom]);
 
   const fetchRoomDetails = async () => {

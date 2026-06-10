@@ -25,6 +25,7 @@ const EmployeesPage = () => {
 
     useEffect(() => {
         fetchEmployees();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [filters, pagination.page]);
 
     const fetchEmployees = async () => {

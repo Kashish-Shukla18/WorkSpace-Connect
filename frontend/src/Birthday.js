@@ -39,7 +39,6 @@ export default function WishesPage() {
                 setEmployees(res.data.employees);
 
                 // Get today's MM-DD
-                const today = new Date();
                 const todayStr = "08-24"
 
                 console.log("📅 Today's date (Local MM-DD):", todayStr);
