@@ -1,223 +1,200 @@
-   /* WishesPage.css */
 .wishes-container {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  padding: 2rem;
+  padding: 28px;
+  max-width: 900px;
+  margin: 0 auto;
+  animation: fadeIn 0.3s ease-out;
 }
 
+/* ── Header ── */
 .wishes-header {
-  font-size: 2.5rem;
-  font-weight: bold;
-  color: #2d3748;
-  text-align: center;
-  margin-bottom: 2rem;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.debug-panel {
-  background: #fffaf0;
-  border-left: 4px solid #d69e2e;
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.debug-header {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #744210;
-  margin-bottom: 1rem;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 24px;
+  letter-spacing: -0.4px;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 10px;
 }
 
-.debug-info {
-  font-size: 0.875rem;
-  color: #5f370e;
-}
-
-.debug-info strong {
-  color: #744210;
-  font-weight: 600;
-}
-
-.error-text {
-  color: #e53e3e;
-  font-weight: 500;
-}
-
+/* ── Birthdays List ── */
 .birthdays-list {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
+  background: var(--card-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  margin-bottom: 16px;
 }
 
 .birthdays-header {
-  font-size: 1.5rem;
+  font-size: 13px;
   font-weight: 600;
-  color: #2d3748;
-  margin-bottom: 1rem;
+  color: var(--text-secondary);
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--elevated-color);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
 }
 
+/* ── Employee Card ── */
 .employee-card {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 0;
-  border-bottom: 1px solid #e2e8f0;
-  transition: background-color 0.2s ease;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+  transition: background 0.15s;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.employee-card:last-child {
+  border-bottom: none;
 }
 
 .employee-card:hover {
-  background-color: #f7fafc;
-  border-radius: 8px;
-  padding: 1rem;
+  background: var(--elevated-color);
 }
 
 .employee-info {
-  font-size: 1.1rem;
-  color: #4a5568;
-  font-weight: 500;
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
 .employee-email {
-  color: #718096;
-  font-size: 0.9rem;
-  margin-top: 0.25rem;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 400;
 }
 
+/* ── Wish Button ── */
 .wish-button {
-  background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
-  color: white;
-  padding: 0.75rem 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--accent-color);
+  color: #000;
+  padding: 8px 18px;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--border-radius);
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 6px rgba(66, 153, 225, 0.3);
+  transition: background 0.15s, transform 0.1s;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .wish-button:hover {
-  background: linear-gradient(135deg, #3182ce 0%, #2b6cb0 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(66, 153, 225, 0.4);
+  background: var(--accent-hover);
 }
 
 .wish-button:active {
-  transform: translateY(0);
+  transform: scale(0.98);
 }
 
 .no-birthdays {
   text-align: center;
-  font-size: 1.2rem;
-  color: #718096;
-  padding: 3rem;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  font-size: 13px;
+  color: var(--text-secondary);
+  padding: 48px 20px;
+  background: var(--card-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
 }
 
+/* ── Debug Panel ── */
+.debug-panel {
+  background: rgba(245, 158, 11, 0.06);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-left: 3px solid var(--warning-color);
+  border-radius: var(--border-radius);
+  padding: 16px 18px;
+  margin-bottom: 16px;
+}
+
+.debug-header {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--warning-color);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.debug-info {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.debug-info strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.error-text {
+  color: var(--error-color);
+  font-weight: 500;
+}
+
+/* ── Filtered List ── */
 .filtered-list {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid #e2e8f0;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
 }
 
 .filtered-header {
   font-weight: 600;
-  color: #744210;
-  margin-bottom: 0.5rem;
+  color: var(--warning-color);
+  font-size: 12px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
 }
 
 .filtered-list ul {
-  list-style-type: none;
+  list-style: none;
   padding: 0;
+  margin: 0;
 }
 
 .filtered-list li {
-  padding: 0.25rem 0;
-  color: #5f370e;
-  font-size: 0.9rem;
+  padding: 4px 0;
+  color: var(--text-secondary);
+  font-size: 12px;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .wishes-container {
-    padding: 1rem;
-  }
-  
-  .wishes-header {
-    font-size: 2rem;
-  }
-  
-  .employee-card {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-  
-  .wish-button {
-    align-self: flex-end;
-  }
-}
-
-@media (max-width: 480px) {
-  .wishes-header {
-    font-size: 1.75rem;
-  }
-  
-  .birthdays-header {
-    font-size: 1.25rem;
-  }
-  
-  .employee-info {
-    font-size: 1rem;
-  }
-  
-  .wish-button {
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
-  }
-}
-
-/* Animation for birthday elements */
-@keyframes celebrate {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-  100% { transform: scale(1); }
-}
-
-.birthdays-header::before {
-  content: "🎂";
-  animation: celebrate 2s ease-in-out infinite;
-}
-
-.wishes-header::before {
-  content: "🎉";
-  animation: celebrate 2s ease-in-out infinite;
-}
-
-/* Loading state */
+/* ── Loading ── */
 .loading {
   opacity: 0.7;
   pointer-events: none;
 }
 
-/* Success animation */
-@keyframes success {
-  0% { background-color: #ffffff; }
-  50% { background-color: #c6f6d5; }
-  100% { background-color: #ffffff; }
-}
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .wishes-container {
+    padding: 16px;
+  }
 
-.success-animation {
-  animation: success 2s ease-in-out;
+  .employee-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .wish-button {
+    align-self: flex-start;
+  }
 }

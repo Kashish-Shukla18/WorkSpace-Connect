@@ -1,7 +1,27 @@
 import { API_BASE_URL } from './config';
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import { FaPaperPlane } from "react-icons/fa";
 import "./RoomChat.css";
+
+function formatTime(dateStr) {
+  const d = dateStr ? new Date(dateStr) : new Date();
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function formatDateSep(dateStr) {
+  const d = dateStr ? new Date(dateStr) : new Date();
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  if (d.toDateString() === today.toDateString()) return "Today";
+  if (d.toDateString() === yesterday.toDateString()) return "Yesterday";
+  return d.toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' });
+}
+
+function getInitial(name) {
+  return name ? name.charAt(0).toUpperCase() : '?';
+}
 
 function RoomChat({ room, currentUser, socket }) {
   const [messages, setMessages] = useState([]);
@@ -9,47 +29,23 @@ function RoomChat({ room, currentUser, socket }) {
   const messagesEndRef = useRef(null);
   const token = localStorage.getItem("token");
 
-  useEffect(() => {
-    console.log("💬 RoomChat mounted/updated");
-    console.log("📞 Room:", room);
-    console.log("👤 Current user:", currentUser);
-    console.log("🔌 Socket:", socket ? "Connected" : "Disconnected");
-  }, [room, currentUser, socket]);
-
   const fetchMessages = async () => {
-    console.group("📥 fetchMessages()");
-    if (!room?.id) {
-      console.warn("⚠️ No room ID");
-      console.groupEnd();
-      return;
-    }
+    if (!room?.id) return;
     try {
-      console.log(`🌐 Fetching messages for room ${room.id}`);
       const res = await axios.get(
         `${API_BASE_URL}/api/rooms/${room.id}/messages`,
         { headers: { Authorization: token } }
       );
-      console.log(`✅ Retrieved ${res.data.length} messages`);
       setMessages(res.data);
     } catch (err) {
-      console.error("❌ Error fetching messages:");
-      console.error("Status:", err.response?.status);
-      console.error("Data:", err.response?.data);
-      console.error("Message:", err.message);
+      console.error("Error fetching messages:", err);
     }
-    console.groupEnd();
   };
 
   const handleNewMessage = (message) => {
-    console.group("📨 handleNewMessage()");
-    console.log("New message received:", message);
     if (message.room_id === room.id) {
-      console.log("✅ Message belongs to current room, adding to state");
       setMessages((prev) => [...prev, message]);
-    } else {
-      console.log("❌ Message doesn't belong to current room, ignoring");
     }
-    console.groupEnd();
   };
 
   const scrollToBottom = () => {
@@ -57,106 +53,127 @@ function RoomChat({ room, currentUser, socket }) {
   };
 
   const sendMessage = () => {
-    console.group("📤 sendMessage()");
-    if (!newMessage.trim()) {
-      console.warn("⚠️ Message is empty");
-      console.groupEnd();
-      return;
-    }
-
-    if (!socket) {
-      console.error("❌ Socket not available");
-      console.groupEnd();
-      return;
-    }
-
-    if (!currentUser) {
-      console.error("❌ Current user not available");
-      console.groupEnd();
-      return;
-    }
-
-    console.log("Emitting sendRoomMessage event:", {
-      roomId: room.id,
-      message: newMessage
-    });
-    
-    socket.emit("sendRoomMessage", {
-      roomId: room.id,
-      message: newMessage,
-    });
-
+    if (!newMessage.trim() || !socket || !currentUser) return;
+    socket.emit("sendRoomMessage", { roomId: room.id, message: newMessage });
     setNewMessage("");
-    console.groupEnd();
   };
 
   useEffect(() => {
-    console.group("🔌 Socket setup effect");
-    if (!room?.id || !socket || !currentUser) {
-      console.warn("⚠️ Missing room ID, socket, or current user");
-      console.groupEnd();
-      return;
-    }
-
+    if (!room?.id || !socket || !currentUser) return;
     fetchMessages();
-
-    console.log("Leaving all rooms and joining room:", room.id);
     socket.emit("leaveAllRooms");
     socket.emit("joinRoom", { roomId: room.id });
-
     socket.on("receiveRoomMessage", handleNewMessage);
-    console.log("✅ Socket event listener added for receiveRoomMessage");
-
-    return () => {
-      console.log("🧹 Cleaning up socket event listeners");
-      socket.off("receiveRoomMessage", handleNewMessage);
-    };
+    return () => { socket.off("receiveRoomMessage", handleNewMessage); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [room?.id, socket, currentUser]);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+  useEffect(() => { scrollToBottom(); }, [messages]);
+
+  // Build grouped message list with date separators
+  const grouped = [];
+  let lastDate = null;
+  let lastSenderId = null;
+  let lastSenderTime = null;
+
+  messages.forEach((msg, idx) => {
+    const msgDate = msg.created_at ? new Date(msg.created_at).toDateString() : new Date().toDateString();
+    if (msgDate !== lastDate) {
+      grouped.push({ type: 'sep', date: msg.created_at, key: `sep-${idx}` });
+      lastDate = msgDate;
+      lastSenderId = null;
+    }
+
+    // Group by sender within 5 minutes
+    const msgTime = msg.created_at ? new Date(msg.created_at).getTime() : Date.now();
+    const timeDiff = lastSenderTime ? (msgTime - lastSenderTime) / 1000 / 60 : Infinity;
+    const isGrouped = lastSenderId === msg.sender_id && timeDiff < 5;
+
+    lastSenderId = msg.sender_id;
+    lastSenderTime = msgTime;
+    grouped.push({ ...msg, type: 'msg', isGrouped });
+  });
+
+  const isOwn = (msg) => msg.sender_id === currentUser?.id;
 
   return (
     <div className="room-chat">
-      <h3>#{room?.name}</h3>
-      {/* <div className="debug-info" style={{fontSize: '11px', color: '#666', marginBottom: '10px'}}>
-        Room ID: {room?.id}, Messages: {messages.length}, 
-        Socket: {socket ? "Connected" : "Disconnected"}, 
-        User: {currentUser ? currentUser.username : "Not logged in"}
-      </div> */}
-
+      {/* Messages */}
       <div className="messages-container">
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`message ${
-              msg.sender_id === currentUser?.id ? "own-message" : ""
-            }`}
-          >
-            <div className="message-sender">{msg.sender_name || "Unknown"}:</div>
-            <div className="message-content">{msg.message}</div>
-            <div className="message-time">
-              {new Date(msg.created_at).toLocaleTimeString()}
-            </div>
+        {messages.length === 0 && (
+          <div className="room-chat-empty">
+            <div className="room-chat-empty-icon">#</div>
+            <h4>Welcome to #{room?.name}</h4>
+            <p>This is the beginning of the #{room?.name} channel. Say hello!</p>
           </div>
-        ))}
+        )}
+
+        {grouped.map((item) => {
+          if (item.type === 'sep') {
+            return (
+              <div key={item.key} className="rc-date-separator">
+                <span>{formatDateSep(item.date)}</span>
+              </div>
+            );
+          }
+
+          const own = isOwn(item);
+          return (
+            <div
+              key={item.id}
+              className={`rc-message ${own ? 'own' : ''} ${item.isGrouped ? 'grouped' : ''}`}
+            >
+              {!item.isGrouped ? (
+                <div className="rc-msg-avatar">
+                  {getInitial(item.sender_name)}
+                </div>
+              ) : (
+                <div className="rc-msg-avatar-spacer" />
+              )}
+
+              <div className="rc-msg-body">
+                {!item.isGrouped && (
+                  <div className="rc-msg-meta">
+                    <span className={`rc-msg-sender ${own ? 'own-sender' : ''}`}>
+                      {own ? 'You' : (item.sender_name || 'Unknown')}
+                    </span>
+                    <span className="rc-msg-timestamp">{formatTime(item.created_at)}</span>
+                  </div>
+                )}
+                <div className="rc-msg-content">
+                  <span>{item.message}</span>
+                  {item.isGrouped && (
+                    <span className="rc-msg-hover-time">{formatTime(item.created_at)}</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="message-input">
-        <input
-          type="text"
-          placeholder="Type a message..."
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-          disabled={!currentUser || !socket}
-        />
-        <button onClick={sendMessage} disabled={!currentUser || !socket}>
-          Send
-        </button>
+      {/* Input */}
+      <div className="rc-input-area">
+        <div className="rc-input-wrap">
+          <input
+            type="text"
+            placeholder={`Message #${room?.name || 'channel'}...`}
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+            disabled={!currentUser || !socket}
+            className="rc-input"
+          />
+          <button
+            onClick={sendMessage}
+            disabled={!currentUser || !socket || !newMessage.trim()}
+            className="rc-send-btn"
+            title="Send message"
+          >
+            <FaPaperPlane />
+          </button>
+        </div>
       </div>
     </div>
   );

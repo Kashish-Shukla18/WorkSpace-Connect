@@ -5,6 +5,7 @@ import io from "socket.io-client";
 import UserList from "./UserList";
 import ChatWindow from "./ChatWindow";
 import Layout from "./Layout";
+import './ChatPage.css';
 
 
 const socket = io(`${API_BASE_URL}`); // backend

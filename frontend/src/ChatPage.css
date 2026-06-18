@@ -1,0 +1,130 @@
+/* ── Main Chat Layout ── */
+.container-fluid,
+.container-fluid.vh-100 {
+  display: flex;
+  height: calc(100vh - 56px);
+  overflow: hidden;
+  background: var(--bg-color);
+  padding: 0 !important;
+}
+
+/* ── Sidebar (User List) ── */
+.container-fluid .col-3,
+.container-fluid .border-end {
+  width: 280px;
+  min-width: 280px;
+  flex-shrink: 0;
+  background: var(--surface-color);
+  border-right: 1px solid var(--border-color) !important;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Sidebar header */
+.container-fluid .col-3::before {
+  content: 'Direct Messages';
+  display: block;
+  padding: 16px 18px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.9px;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+/* ── Chat Panel ── */
+.container-fluid .col-9 {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Utility ── */
+.container-fluid .d-flex { display: flex; }
+.container-fluid .h-100  { height: 100%; }
+.container-fluid .align-items-center  { align-items: center; }
+.container-fluid .justify-content-center { justify-content: center; }
+
+/* ── No Chat Selected State ── */
+.container-fluid .text-muted {
+  color: var(--text-secondary);
+  font-size: 14px;
+  text-align: center;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chat-select-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 16px;
+  color: var(--text-secondary);
+}
+
+.chat-select-icon {
+  font-size: 48px;
+  opacity: 0.3;
+}
+
+.chat-select-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.chat-select-sub {
+  font-size: 13px;
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .container-fluid {
+    flex-direction: column;
+  }
+
+  .container-fluid .col-3 {
+    width: 100%;
+    min-width: unset;
+    max-height: 140px;
+    border-right: none !important;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .container-fluid .col-3::before {
+    padding: 10px 14px 8px;
+  }
+
+  /* Horizontal scroll in mobile */
+  .container-fluid .col-3 .user-list {
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 8px;
+    gap: 4px;
+  }
+
+  .container-fluid .col-3 .user-circle {
+    min-width: auto;
+    padding: 8px;
+    flex-direction: column;
+    text-align: center;
+    min-height: auto;
+    gap: 4px;
+  }
+
+  .container-fluid .col-9 {
+    flex: 1;
+    min-height: 0;
+  }
+}

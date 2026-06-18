@@ -282,12 +282,15 @@ function NotificationBell({ currentUser }) {
         position: 'absolute',
         top: '40px',
         right: '0',
-        background: '#f0f0f0',
-        padding: '10px',
-        border: '1px solid #ccc',
-        fontSize: '12px',
+        background: '#1a1a20',
+        padding: '12px',
+        border: '1px solid rgba(255,255,255,0.08)',
+        borderRadius: '4px',
+        fontSize: '11px',
+        color: '#5c6270',
         zIndex: 1000,
-        display: isOpen ? 'block' : 'none'
+        display: isOpen ? 'block' : 'none',
+        minWidth: '200px'
       }}>
         <h5>Debug Info</h5>
         <div>Tab Active: {debugInfo.tabActive ? '✅' : '❌'}</div>
