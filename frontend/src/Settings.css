@@ -1,0 +1,141 @@
+.settings-page {
+  padding: 28px;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.settings-header h1 {
+  margin: 0 0 6px;
+  font-size: 24px;
+  color: var(--text-primary);
+}
+
+.settings-header p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.settings-link-btn {
+  color: var(--accent-color);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 14px;
+  border: 1px solid var(--border-accent);
+  border-radius: var(--border-radius);
+  background: var(--accent-dim);
+}
+
+.settings-card {
+  background: var(--card-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.settings-card h2 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  color: var(--text-primary);
+}
+
+.settings-desc {
+  margin: 0 0 16px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.settings-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+}
+
+.settings-toggle:last-of-type {
+  border-bottom: none;
+}
+
+.settings-toggle strong {
+  display: block;
+  color: var(--text-primary);
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+.settings-toggle span {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.settings-toggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent-color);
+}
+
+.settings-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.settings-links button {
+  background: var(--elevated-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 8px 12px;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.settings-save-btn {
+  background: var(--accent-color);
+  color: #000;
+  border: none;
+  padding: 12px 20px;
+  border-radius: var(--border-radius);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.settings-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.settings-alert {
+  padding: 12px 16px;
+  border-radius: var(--border-radius);
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+
+.settings-alert.success {
+  background: var(--success-dim);
+  color: var(--success-color);
+}
+
+.settings-alert.error {
+  background: var(--error-dim);
+  color: var(--error-color);
+}
+
+.settings-loading {
+  color: var(--text-secondary);
+}

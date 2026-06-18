@@ -128,10 +128,23 @@ CREATE TABLE room_messages (
 CREATE TABLE notifications (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    type VARCHAR(50),
     title VARCHAR(255) NOT NULL,
     message TEXT NOT NULL,
+    related_id INTEGER,
+    related_type VARCHAR(50),
     is_read BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 12. User notification preferences
+CREATE TABLE user_notification_preferences (
+    user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    email_notifications BOOLEAN DEFAULT TRUE,
+    push_notifications BOOLEAN DEFAULT TRUE,
+    desktop_notifications BOOLEAN DEFAULT TRUE,
+    sound_enabled BOOLEAN DEFAULT TRUE,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Insert some default data for departments and roles (Optional)

@@ -1,168 +1,143 @@
+import React, { useEffect, useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import axios from 'axios';
 import { API_BASE_URL } from './config';
-import React, { useEffect, useState } from "react";
-import axios from "axios";
-import Layout from "./Layout";
-import { useNavigate } from "react-router-dom";
-import "./Birthday.css";
+import Layout from './Layout';
+import './Birthday.css';
 
 export default function WishesPage() {
-    const [employees, setEmployees] = useState([]);
-    const [todayBirthdays, setTodayBirthdays] = useState([]);
-    const [debugInfo, setDebugInfo] = useState({
-        tokenStatus: "",
-        apiResponse: null,
-        filteredBirthdays: [],
-        todayDate: "",
-        error: null
-    });
-    const navigate = useNavigate();
+  const [todayBirthdays, setTodayBirthdays] = useState([]);
+  const [upcomingBirthdays, setUpcomingBirthdays] = useState([]);
+  const [todayDate, setTodayDate] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [wishMessages, setWishMessages] = useState({});
+  const [sentWishes, setSentWishes] = useState({});
+  const navigate = useNavigate();
 
-    useEffect(() => {
-        console.log("🔍 WishesPage mounted");
+  useEffect(() => {
+    const fetchBirthdays = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return navigate('/login');
 
-        const fetchEmployees = async () => {
-            try {
-                const token = localStorage.getItem("token");
-                if (!token) return navigate("/login");
+        const res = await axios.get(`${API_BASE_URL}/api/birthdays`, {
+          headers: { Authorization: token },
+        });
 
-                setDebugInfo(prev => ({ ...prev, tokenStatus: "Token present" }));
-
-                console.log("🌐 Making API request to employees endpoint...");
-                const res = await axios.get(`${API_BASE_URL}/api/employees`, {
-                    headers: { Authorization: token }
-                });
-
-                console.log("✅ API Response:", res.data);
-                console.log("📊 Employees count:", res.data.employees?.length || 0);
-                setDebugInfo(prev => ({ ...prev, apiResponse: res.data }));
-
-                setEmployees(res.data.employees);
-
-                // Get today's MM-DD
-                const todayStr = "08-24"
-
-                console.log("📅 Today's date (Local MM-DD):", todayStr);
-                setDebugInfo(prev => ({ ...prev, todayDate: todayStr }));
-
-                // Debug: Show all employee DOBs
-                console.log("🎂 All employee birthdays:");
-                res.data.employees.forEach(emp => {
-                    console.log(
-                        `- ${emp.first_name} ${emp.last_name}: ${emp.date_of_birth} -> ${emp.date_of_birth?.slice(5, 10)}`
-                    );
-                });
-
-                // Match DOB
-                const bdays = res.data.employees.filter(
-                    emp =>
-                        emp.date_of_birth &&
-                        emp.date_of_birth.slice(5, 10) === todayStr
-                );
-
-                console.log("🎯 Filtered birthdays today:", bdays);
-                console.log("🎯 Count:", bdays.length);
-                setDebugInfo(prev => ({ ...prev, filteredBirthdays: bdays }));
-
-                setTodayBirthdays(bdays);
-            } catch (err) {
-                console.error("❌ Error fetching employees", err);
-                console.error("Error details:", err.response?.data || err.message);
-                setDebugInfo(prev => ({ ...prev, error: err.message }));
-            }
-        };
-
-        fetchEmployees();
-    }, [navigate]);
-
-    const sendWish = async (email, text) => {
-        try {
-            console.log("📧 Attempting to send Email:");
-            console.log("   To:", email);
-            console.log("   Message:", text);
-
-            const token = localStorage.getItem("token");
-            if (!token) {
-                alert("Please login again");
-                return navigate("/login");
-            }
-
-            const response = await axios.post(
-                `${API_BASE_URL}/send-email`,
-                { to: email, subject: "🎂 Happy Birthday!", text },
-                { headers: { Authorization: token } }
-            );
-
-            console.log("✅ Email sent successfully:", response.data);
-            alert(`Wish sent to ${email}`);
-        } catch (err) {
-            console.error("❌ Failed to send Email:", err);
-            console.error("Error status:", err.response?.status);
-            console.error("Error data:", err.response?.data);
-            console.error("Error details:", err.response?.data?.details || err.message);
-
-            alert(`Failed to send wish: ${err.response?.data?.error || err.message}`);
-        }
+        setTodayBirthdays(res.data.today || []);
+        setUpcomingBirthdays(res.data.upcoming || []);
+        setTodayDate(res.data.todayDate || new Date().toISOString().split('T')[0]);
+      } catch (err) {
+        console.error(err);
+        setError('Failed to load birthday data');
+      } finally {
+        setLoading(false);
+      }
     };
 
+    fetchBirthdays();
+  }, [navigate]);
+
+  const sendWish = async (employee) => {
+    const defaultText = `Happy Birthday ${employee.first_name}! Wishing you a wonderful day from the whole team. 🎉`;
+    const text = wishMessages[employee.id] || defaultText;
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return navigate('/login');
+
+      await axios.post(
+        `${API_BASE_URL}/send-email`,
+        { to: employee.email, subject: '🎂 Happy Birthday!', text },
+        { headers: { Authorization: token } }
+      );
+
+      setSentWishes((prev) => ({ ...prev, [employee.id]: true }));
+    } catch (err) {
+      alert(`Failed to send wish: ${err.response?.data?.error || err.message}`);
+    }
+  };
+
+  const formatDisplayDate = (dateStr) => {
+    if (!dateStr) return '';
+    return new Date(dateStr).toLocaleDateString(undefined, { month: 'long', day: 'numeric' });
+  };
+
+  if (loading) {
     return (
-        <Layout>
-            <div className="min-h-screen bg-gray-100 p-6">
-                <h1 className="text-2xl font-bold mb-4">🎉 Birthday Wishes Portal</h1>
-
-                {/* Debug Panel */}
-                <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-6">
-                    <h2 className="text-lg font-semibold mb-2">🔍 Debug Information</h2>
-                    <div className="text-sm">
-                        <p><strong>Token Status:</strong> {debugInfo.tokenStatus}</p>
-                        <p><strong>Today's Date (MM-DD):</strong> {debugInfo.todayDate}</p>
-                        <p><strong>Total Employees:</strong> {employees.length}</p>
-                        <p><strong>Birthdays Today:</strong> {todayBirthdays.length}</p>
-                        {debugInfo.error && (
-                            <p className="text-red-600"><strong>Error:</strong> {debugInfo.error}</p>
-                        )}
-                    </div>
-
-                    {debugInfo.filteredBirthdays.length > 0 && (
-                        <div className="mt-3">
-                            <h3 className="font-semibold">🎯 Filtered Birthdays:</h3>
-                            <ul className="list-disc list-inside">
-                                {debugInfo.filteredBirthdays.map((emp, index) => (
-                                    <li key={index}>
-                                        {emp.first_name} {emp.last_name} - {emp.date_of_birth}
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
-                </div>
-
-                {todayBirthdays.length > 0 ? (
-                    <div className="bg-white shadow p-4 rounded mb-6">
-                        <h2 className="text-xl font-semibold mb-2">Today's Birthdays 🎂</h2>
-                        {todayBirthdays.map(emp => (
-                            <div
-                                key={emp.id}
-                                className="flex justify-between items-center border-b py-2"
-                            >
-                                <span>
-                                    {emp.first_name} {emp.last_name} ({emp.email})
-                                </span>
-
-                                <button
-                                    onClick={() =>
-                                        sendWish(emp.email, `Happy Birthday ${emp.first_name}! 🎉`)
-                                    }
-                                    className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
-                                >
-                                    Send Wish
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <p className="text-gray-600">No birthdays today 🎈</p>
-                )}
-            </div>
-        </Layout>
+      <Layout>
+        <div className="wishes-container">
+          <p className="loading">Loading birthdays...</p>
+        </div>
+      </Layout>
     );
+  }
+
+  return (
+    <Layout>
+      <div className="wishes-container">
+        <h1 className="wishes-header">🎉 Birthday Wishes</h1>
+        <p className="birthday-today-label">
+          Today: <strong>{new Date(todayDate).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</strong>
+        </p>
+
+        {error && <div className="birthday-error">{error}</div>}
+
+        <div className="birthdays-list">
+          <div className="birthdays-header">Today&apos;s Birthdays 🎂</div>
+          {todayBirthdays.length > 0 ? (
+            todayBirthdays.map((emp) => (
+              <div key={emp.id} className="employee-card">
+                <div className="employee-info">
+                  <span>{emp.first_name} {emp.last_name}</span>
+                  <span className="employee-email">{emp.email}</span>
+                  <span className="employee-meta">{emp.department_name || 'No department'} · Turns {new Date().getFullYear() - new Date(emp.date_of_birth).getFullYear()} today</span>
+                </div>
+                <div className="birthday-actions">
+                  <textarea
+                    className="wish-textarea"
+                    placeholder={`Write a personal message for ${emp.first_name}...`}
+                    value={wishMessages[emp.id] || ''}
+                    onChange={(e) => setWishMessages({ ...wishMessages, [emp.id]: e.target.value })}
+                    rows={2}
+                  />
+                  <div className="birthday-action-buttons">
+                    <Link to={`/employees/${emp.id}`} className="view-employee-btn">View Profile</Link>
+                    <button
+                      className="wish-button"
+                      onClick={() => sendWish(emp)}
+                      disabled={sentWishes[emp.id]}
+                    >
+                      {sentWishes[emp.id] ? 'Wish Sent ✓' : 'Send Wish'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="no-birthdays-inline">No birthdays today — check upcoming celebrations below.</p>
+          )}
+        </div>
+
+        <div className="birthdays-list upcoming-list">
+          <div className="birthdays-header">Upcoming (next 30 days)</div>
+          {upcomingBirthdays.length > 0 ? (
+            upcomingBirthdays.map((emp) => (
+              <div key={emp.id} className="employee-card upcoming-card">
+                <div className="employee-info">
+                  <span>{emp.first_name} {emp.last_name}</span>
+                  <span className="employee-email">{formatDisplayDate(emp.date_of_birth)} · in {emp.daysUntil} day{emp.daysUntil !== 1 ? 's' : ''}</span>
+                  <span className="employee-meta">{emp.department_name || 'No department'}</span>
+                </div>
+                <Link to={`/employees/${emp.id}`} className="view-employee-btn">View Profile</Link>
+              </div>
+            ))
+          ) : (
+            <p className="no-birthdays-inline">No upcoming birthdays in the next 30 days.</p>
+          )}
+        </div>
+      </div>
+    </Layout>
+  );
 }

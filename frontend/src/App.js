@@ -15,6 +15,8 @@ import Calendar from './Calendar';
 import BirthDay from './Birthday';
 import ChatPage from './ChatPage';
 import DiscussionRoomPage from './DiscussionRoomPage';
+import Profile from './Profile';
+import Settings from './Settings';
 import ProtectedLayout from './ProtectedLayout';
 
 function App() {
@@ -89,6 +91,16 @@ function App() {
         <Route path="/discussion" element={
           <ProtectedLayout>
             <DiscussionRoomPage />
+          </ProtectedLayout>
+        } />
+        <Route path="/profile" element={
+          <ProtectedLayout>
+            <Profile />
+          </ProtectedLayout>
+        } />
+        <Route path="/settings" element={
+          <ProtectedLayout>
+            <Settings />
           </ProtectedLayout>
         } />
       </Routes>

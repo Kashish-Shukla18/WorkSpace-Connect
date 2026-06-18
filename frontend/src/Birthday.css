@@ -111,6 +111,93 @@
   border-radius: var(--border-radius);
 }
 
+.birthday-today-label {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin: -12px 0 20px;
+}
+
+.birthday-today-label strong {
+  color: var(--text-primary);
+}
+
+.birthday-error {
+  background: var(--error-dim);
+  color: var(--error-color);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  padding: 12px 16px;
+  border-radius: var(--border-radius);
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+
+.no-birthdays-inline {
+  padding: 20px;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.employee-meta {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.birthday-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 240px;
+  flex: 1;
+}
+
+.wish-textarea {
+  width: 100%;
+  min-width: 220px;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.birthday-action-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.view-employee-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--elevated-color);
+  white-space: nowrap;
+}
+
+.view-employee-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+}
+
+.upcoming-list {
+  margin-top: 16px;
+}
+
+.upcoming-card {
+  align-items: center;
+}
+
+.wish-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* ── Debug Panel ── */
 .debug-panel {
   background: rgba(245, 158, 11, 0.06);

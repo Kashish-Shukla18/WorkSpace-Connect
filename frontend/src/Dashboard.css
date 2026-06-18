@@ -311,3 +311,56 @@
     grid-template-columns: 1fr;
   }
 }
+
+.dashboard-loading,
+.dashboard-error {
+  padding: 40px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.dashboard-error {
+  color: var(--error-color);
+}
+
+.dashboard-quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.dashboard-quick-actions button {
+  background: var(--elevated-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 8px 14px;
+  border-radius: var(--border-radius);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.dashboard-quick-actions button:hover {
+  border-color: var(--border-accent);
+  background: var(--accent-dim);
+  color: var(--accent-color);
+}
+
+.metric-card {
+  cursor: pointer;
+}
+
+.panel-empty {
+  padding: 24px 20px;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.activity-meta {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}

@@ -102,6 +102,111 @@ app.get('/dashboard', authMiddleware, async (req, res) => {
   }
 });
 
+app.get('/api/dashboard/stats', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    const [
+      userResult,
+      myProjectsResult,
+      totalProjectsResult,
+      pendingTasksResult,
+      employeesResult,
+      unreadNotifsResult,
+      recentProjectsResult,
+      recentTasksResult,
+      upcomingTasksResult,
+    ] = await Promise.all([
+      pool.query('SELECT id, username, email FROM users WHERE id = $1', [userId]),
+      pool.query('SELECT COUNT(*)::int AS count FROM projects WHERE created_by = $1', [userId]),
+      pool.query('SELECT COUNT(*)::int AS count FROM projects'),
+      pool.query(
+        `SELECT COUNT(*)::int AS count FROM tasks 
+         WHERE assigned_to = $1 AND LOWER(status) NOT IN ('completed', 'done', 'cancelled')`,
+        [userId]
+      ),
+      pool.query(`SELECT COUNT(*)::int AS count FROM employees WHERE employment_status = 'active'`),
+      pool.query(
+        'SELECT COUNT(*)::int AS count FROM notifications WHERE user_id = $1 AND is_read = FALSE',
+        [userId]
+      ),
+      pool.query(
+        `SELECT p.id, p.name, p.created_at, u.username AS created_by_name
+         FROM projects p
+         JOIN users u ON p.created_by = u.id
+         ORDER BY p.created_at DESC
+         LIMIT 5`
+      ),
+      pool.query(
+        `SELECT t.id, t.title, t.status, t.updated_at, t.due_date, p.name AS project_name,
+                u.username AS assignee_name
+         FROM tasks t
+         LEFT JOIN projects p ON t.project_id = p.id
+         LEFT JOIN users u ON t.assigned_to = u.id
+         WHERE t.assigned_to = $1 OR t.created_by = $1
+         ORDER BY t.updated_at DESC
+         LIMIT 8`,
+        [userId]
+      ),
+      pool.query(
+        `SELECT t.id, t.title, t.due_date, t.priority, t.status, p.name AS project_name
+         FROM tasks t
+         LEFT JOIN projects p ON t.project_id = p.id
+         WHERE (t.assigned_to = $1 OR t.created_by = $1)
+           AND t.due_date IS NOT NULL
+           AND t.due_date >= CURRENT_DATE
+           AND LOWER(t.status) NOT IN ('completed', 'done', 'cancelled')
+         ORDER BY t.due_date ASC
+         LIMIT 6`,
+        [userId]
+      ),
+    ]);
+
+    const activities = [];
+
+    recentProjectsResult.rows.forEach((project) => {
+      activities.push({
+        id: `project-${project.id}`,
+        type: 'project',
+        message: `Project <strong>${project.name}</strong> was created`,
+        actor: project.created_by_name,
+        timestamp: project.created_at,
+      });
+    });
+
+    recentTasksResult.rows.forEach((task) => {
+      const completed = ['completed', 'done'].includes((task.status || '').toLowerCase());
+      activities.push({
+        id: `task-${task.id}`,
+        type: 'task',
+        message: completed
+          ? `<strong>${task.assignee_name || 'Someone'}</strong> completed <strong>${task.title}</strong>`
+          : `Task <strong>${task.title}</strong> was updated`,
+        project: task.project_name,
+        timestamp: task.updated_at,
+      });
+    });
+
+    activities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    res.json({
+      user: userResult.rows[0],
+      metrics: {
+        myProjects: myProjectsResult.rows[0].count,
+        totalProjects: totalProjectsResult.rows[0].count,
+        pendingTasks: pendingTasksResult.rows[0].count,
+        teamMembers: employeesResult.rows[0].count,
+        unreadNotifications: unreadNotifsResult.rows[0].count,
+      },
+      recentActivity: activities.slice(0, 6),
+      upcomingDeadlines: upcomingTasksResult.rows,
+    });
+  } catch (err) {
+    console.error('Error fetching dashboard stats:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Project routes
 app.post('/projects', authMiddleware, async (req, res) => {
   const { name, description } = req.body;
@@ -712,12 +817,229 @@ app.get('/api/rooms/:roomId', authMiddleware, async (req, res) => {
 app.get('/api/current-user', authMiddleware, async (req, res) => {
   try {
     const user = await pool.query(
-      'SELECT id, username, email FROM users WHERE id = $1',
+      'SELECT id, username, email, created_at FROM users WHERE id = $1',
       [req.userId]
     );
     res.json(user.rows[0]);
   } catch (err) {
     console.error('Error fetching current user:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.get('/api/profile', authMiddleware, async (req, res) => {
+  try {
+    const userResult = await pool.query(
+      'SELECT id, username, email, created_at FROM users WHERE id = $1',
+      [req.userId]
+    );
+    const user = userResult.rows[0];
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const employeeResult = await pool.query(
+      `SELECT e.*, d.name AS department_name, r.title AS role_title
+       FROM employees e
+       LEFT JOIN departments d ON e.department_id = d.id
+       LEFT JOIN roles r ON e.role_id = r.id
+       WHERE LOWER(e.email) = LOWER($1)
+       LIMIT 1`,
+      [user.email]
+    );
+
+    const prefsResult = await pool.query(
+      'SELECT * FROM user_notification_preferences WHERE user_id = $1',
+      [req.userId]
+    );
+
+    res.json({
+      user,
+      employee: employeeResult.rows[0] || null,
+      notificationPreferences: prefsResult.rows[0] || null,
+    });
+  } catch (err) {
+    console.error('Error fetching profile:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.put('/api/profile', authMiddleware, async (req, res) => {
+  const { username, email } = req.body;
+  if (!username?.trim() || !email?.trim()) {
+    return res.status(400).json({ error: 'Username and email are required' });
+  }
+
+  try {
+    const result = await pool.query(
+      `UPDATE users SET username = $1, email = $2
+       WHERE id = $3
+       RETURNING id, username, email, created_at`,
+      [username.trim(), email.trim(), req.userId]
+    );
+    res.json({ user: result.rows[0], message: 'Profile updated successfully' });
+  } catch (err) {
+    console.error('Error updating profile:', err);
+    if (err.code === '23505') {
+      return res.status(400).json({ error: 'Username or email already in use' });
+    }
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.put('/api/profile/password', authMiddleware, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  if (!currentPassword || !newPassword || newPassword.length < 6) {
+    return res.status(400).json({ error: 'Valid current and new password (min 6 chars) required' });
+  }
+
+  try {
+    const userResult = await pool.query('SELECT password FROM users WHERE id = $1', [req.userId]);
+    const user = userResult.rows[0];
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const valid = await bcrypt.compare(currentPassword, user.password);
+    if (!valid) return res.status(400).json({ error: 'Current password is incorrect' });
+
+    const hashedPassword = await bcrypt.hash(newPassword, 8);
+    await pool.query('UPDATE users SET password = $1 WHERE id = $2', [hashedPassword, req.userId]);
+    res.json({ message: 'Password updated successfully' });
+  } catch (err) {
+    console.error('Error updating password:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.get('/api/settings', authMiddleware, async (req, res) => {
+  try {
+    const userResult = await pool.query(
+      'SELECT id, username, email, created_at FROM users WHERE id = $1',
+      [req.userId]
+    );
+    const prefsResult = await pool.query(
+      'SELECT * FROM user_notification_preferences WHERE user_id = $1',
+      [req.userId]
+    );
+
+    res.json({
+      user: userResult.rows[0],
+      notifications: prefsResult.rows[0] || {
+        email_notifications: true,
+        push_notifications: true,
+        desktop_notifications: true,
+        sound_enabled: true,
+      },
+    });
+  } catch (err) {
+    console.error('Error fetching settings:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.put('/api/settings', authMiddleware, async (req, res) => {
+  try {
+    const {
+      email_notifications = true,
+      push_notifications = true,
+      desktop_notifications = true,
+      sound_enabled = true,
+    } = req.body;
+
+    const result = await pool.query(
+      `INSERT INTO user_notification_preferences
+        (user_id, email_notifications, push_notifications, desktop_notifications, sound_enabled)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (user_id)
+       DO UPDATE SET
+         email_notifications = $2,
+         push_notifications = $3,
+         desktop_notifications = $4,
+         sound_enabled = $5
+       RETURNING *`,
+      [req.userId, email_notifications, push_notifications, desktop_notifications, sound_enabled]
+    );
+
+    res.json({ notifications: result.rows[0], message: 'Settings saved successfully' });
+  } catch (err) {
+    console.error('Error updating settings:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.get('/api/birthdays', authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT e.id, e.first_name, e.last_name, e.email, e.date_of_birth,
+              d.name AS department_name, r.title AS role_title
+       FROM employees e
+       LEFT JOIN departments d ON e.department_id = d.id
+       LEFT JOIN roles r ON e.role_id = r.id
+       WHERE e.date_of_birth IS NOT NULL
+       ORDER BY e.first_name, e.last_name`
+    );
+
+    const now = new Date();
+    const todayMMDD = `${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+    const getMMDD = (dob) => {
+      if (!dob) return '';
+      const str = String(dob);
+      return str.includes('T') ? str.slice(5, 10) : str.slice(5, 10);
+    };
+
+    const daysUntilBirthday = (dob) => {
+      const birth = new Date(dob);
+      const next = new Date(now.getFullYear(), birth.getMonth(), birth.getDate());
+      if (next < new Date(now.getFullYear(), now.getMonth(), now.getDate())) {
+        next.setFullYear(now.getFullYear() + 1);
+      }
+      return Math.ceil((next - now) / (1000 * 60 * 60 * 24));
+    };
+
+    const today = [];
+    const upcoming = [];
+
+    result.rows.forEach((emp) => {
+      const mmdd = getMMDD(emp.date_of_birth);
+      const daysUntil = daysUntilBirthday(emp.date_of_birth);
+      const entry = { ...emp, daysUntil };
+
+      if (mmdd === todayMMDD) {
+        today.push(entry);
+      } else if (daysUntil > 0 && daysUntil <= 30) {
+        upcoming.push(entry);
+      }
+    });
+
+    upcoming.sort((a, b) => a.daysUntil - b.daysUntil);
+
+    res.json({
+      todayDate: now.toISOString().split('T')[0],
+      todayMMDD,
+      today,
+      upcoming: upcoming.slice(0, 15),
+      totalEmployees: result.rows.length,
+    });
+  } catch (err) {
+    console.error('Error fetching birthdays:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.get('/api/departments', authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT id, name FROM departments ORDER BY name');
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching departments:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.get('/api/roles', authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT id, title FROM roles ORDER BY title');
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching roles:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });

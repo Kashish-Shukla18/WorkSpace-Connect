@@ -50,15 +50,15 @@ const EditEmployee = () => {
             // Fetch departments and roles for dropdowns
             const [deptResponse, rolesResponse] = await Promise.all([
                 axios.get(`${API_BASE_URL}/api/departments`, {
-                    headers: { Authorization: `Bearer ${token}` }
+                    headers: { Authorization: token }
                 }),
                 axios.get(`${API_BASE_URL}/api/roles`, {
-                    headers: { Authorization: `Bearer ${token}` }
+                    headers: { Authorization: token }
                 })
             ]);
 
-            setDepartments(deptResponse.data.departments || []);
-            setRoles(rolesResponse.data.roles || []);
+            setDepartments(Array.isArray(deptResponse.data) ? deptResponse.data : deptResponse.data.departments || []);
+            setRoles(Array.isArray(rolesResponse.data) ? rolesResponse.data : rolesResponse.data.roles || []);
         } catch (err) {
             console.error('Error fetching dropdown data:', err);
         }

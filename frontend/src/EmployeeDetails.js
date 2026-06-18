@@ -32,14 +32,34 @@ const EmployeeDetails = () => {
         }
     };
 
+    const handleDelete = async () => {
+        if (!window.confirm('Are you sure you want to delete this employee?')) return;
+        try {
+            const token = localStorage.getItem('token');
+            await axios.delete(`${API_BASE_URL}/api/employees/${id}`, {
+                headers: { Authorization: token }
+            });
+            navigate('/employees');
+        } catch (err) {
+            alert(err.response?.data?.error || 'Failed to delete employee');
+        }
+    };
+
     const formatDate = (dateString) => {
+        if (!dateString) return '—';
         return new Date(dateString).toLocaleDateString();
     };
 
     const calculateAge = (dob) => {
+        if (!dob) return '—';
         const birthDate = new Date(dob);
         const today = new Date();
-        return today.getFullYear() - birthDate.getFullYear();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return age;
     };
 
     if (loading) return <Layout><div className="loading">Loading employee details...</div></Layout>;
@@ -55,32 +75,39 @@ const EmployeeDetails = () => {
                     </button>
                     <h1>Employee Details</h1>
                     <div className="header-actions">
-                        <button className="btn-edit">Edit Employee</button>
-                        <button className="btn-delete">Delete</button>
+                        <button className="btn-edit-emp" onClick={() => navigate(`/employees/edit/${id}`)}>
+                            Edit Employee
+                        </button>
+                        <button className="btn-delete-emp" onClick={handleDelete}>
+                            Delete
+                        </button>
                     </div>
                 </div>
 
                 <div className="employee-profile">
-                    <div className="profile-image">
-                        {employee.profile_image ? (
-                            <img src={employee.profile_image} alt={`${employee.first_name} ${employee.last_name}`} />
-                        ) : (
-                            <div className="avatar-placeholder">
-                                {employee.first_name.charAt(0)}{employee.last_name.charAt(0)}
-                            </div>
-                        )}
+                    <div className="profile-identity">
+                        <div className="profile-image">
+                            {employee.profile_image ? (
+                                <img src={employee.profile_image} alt={`${employee.first_name} ${employee.last_name}`} />
+                            ) : (
+                                <div className="avatar-placeholder">
+                                    {employee.first_name.charAt(0)}{employee.last_name.charAt(0)}
+                                </div>
+                            )}
+                        </div>
+                        <div className="profile-info">
+                            <h2>{employee.first_name} {employee.last_name}</h2>
+                            <p className="employee-id">ID: {employee.employee_id}</p>
+                            <p className="employee-email">{employee.email}</p>
+                            <p className="employee-phone">{employee.phone || '—'}</p>
+                            <p className="employee-role-line">
+                                {employee.role_title || '—'} · {employee.department_name || '—'}
+                            </p>
+                        </div>
                     </div>
-                    
-                    <div className="profile-info">
-                        <h2>{employee.first_name} {employee.last_name}</h2>
-                        <p className="employee-id">ID: {employee.employee_id}</p>
-                        <p className="employee-email">{employee.email}</p>
-                        <p className="employee-phone">{employee.phone}</p>
-                    </div>
-
                     <div className="status-badge">
                         <span className={`status ${employee.employment_status}`}>
-                            {employee.employment_status.replace('_', ' ')}
+                            {employee.employment_status?.replace('_', ' ')}
                         </span>
                     </div>
                 </div>
@@ -94,7 +121,7 @@ const EmployeeDetails = () => {
                         </div>
                         <div className="detail-row">
                             <span className="label">Gender:</span>
-                            <span className="value">{employee.gender}</span>
+                            <span className="value">{employee.gender || '—'}</span>
                         </div>
                     </div>
 
@@ -102,11 +129,11 @@ const EmployeeDetails = () => {
                         <h3>Employment Details</h3>
                         <div className="detail-row">
                             <span className="label">Department:</span>
-                            <span className="value">{employee.department_name}</span>
+                            <span className="value">{employee.department_name || '—'}</span>
                         </div>
                         <div className="detail-row">
                             <span className="label">Role:</span>
-                            <span className="value">{employee.role_title}</span>
+                            <span className="value">{employee.role_title || '—'}</span>
                         </div>
                         <div className="detail-row">
                             <span className="label">Date of Joining:</span>
@@ -114,7 +141,7 @@ const EmployeeDetails = () => {
                         </div>
                         <div className="detail-row">
                             <span className="label">Employment Type:</span>
-                            <span className="value">{employee.employment_type?.replace('_', ' ')}</span>
+                            <span className="value">{employee.employment_type?.replace('_', ' ') || '—'}</span>
                         </div>
                         {employee.termination_date && (
                             <div className="detail-row">
@@ -128,23 +155,23 @@ const EmployeeDetails = () => {
                         <h3>Contact Information</h3>
                         <div className="detail-row">
                             <span className="label">Address:</span>
-                            <span className="value">{employee.address}</span>
+                            <span className="value">{employee.address || '—'}</span>
                         </div>
                         <div className="detail-row">
                             <span className="label">City:</span>
-                            <span className="value">{employee.city}</span>
+                            <span className="value">{employee.city || '—'}</span>
                         </div>
                         <div className="detail-row">
                             <span className="label">State:</span>
-                            <span className="value">{employee.state}</span>
+                            <span className="value">{employee.state || '—'}</span>
                         </div>
                         <div className="detail-row">
                             <span className="label">Country:</span>
-                            <span className="value">{employee.country}</span>
+                            <span className="value">{employee.country || '—'}</span>
                         </div>
                         <div className="detail-row">
                             <span className="label">Postal Code:</span>
-                            <span className="value">{employee.postal_code}</span>
+                            <span className="value">{employee.postal_code || '—'}</span>
                         </div>
                     </div>
 
@@ -152,15 +179,15 @@ const EmployeeDetails = () => {
                         <h3>Emergency Contact</h3>
                         <div className="detail-row">
                             <span className="label">Name:</span>
-                            <span className="value">{employee.emergency_contact_name}</span>
+                            <span className="value">{employee.emergency_contact_name || '—'}</span>
                         </div>
                         <div className="detail-row">
                             <span className="label">Phone:</span>
-                            <span className="value">{employee.emergency_contact_phone}</span>
+                            <span className="value">{employee.emergency_contact_phone || '—'}</span>
                         </div>
                         <div className="detail-row">
                             <span className="label">Relation:</span>
-                            <span className="value">{employee.emergency_contact_relation}</span>
+                            <span className="value">{employee.emergency_contact_relation || '—'}</span>
                         </div>
                     </div>
                 </div>

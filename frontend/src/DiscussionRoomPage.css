@@ -1,11 +1,14 @@
 /* ── Container ── */
 .discussion-room-container {
   width: 100%;
-  height: calc(100vh - 56px);
+  height: calc(100vh - 140px);
+  min-height: 520px;
   display: flex;
   flex-direction: column;
   background: var(--bg-color);
   overflow: hidden;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
 }
 
 .discussion-layout {
@@ -76,7 +79,35 @@
 .discussion-channel-title {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+}
+
+.channel-sidebar-toggle,
+.close-room-btn {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  width: 34px;
+  height: 34px;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.channel-sidebar-toggle:hover,
+.close-room-btn:hover {
+  background: var(--elevated-color);
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+}
+
+.close-room-btn {
+  font-size: 18px;
 }
 
 .channel-hash {
