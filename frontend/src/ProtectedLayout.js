@@ -1,47 +1,24 @@
 import { API_BASE_URL } from './config';
-import React, { useState, useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { Navigate, Outlet } from 'react-router-dom';
 import io from 'socket.io-client';
 import axios from 'axios';
+import { AppContext } from './AppContext';
 
-function ProtectedLayout({ children }) {
+function ProtectedLayout() {
   const [currentUser, setCurrentUser] = useState(null);
   const [socket, setSocket] = useState(null);
+  const [socketReady, setSocketReady] = useState(false);
   const [loading, setLoading] = useState(true);
+  const socketRef = useRef(null);
   const token = localStorage.getItem('token');
-useEffect(() => {
-  if (socket && currentUser) {
-    // Listen for new notifications
-    socket.on('newNotification', (notification) => {
-      // Show browser notification
-      if (Notification.permission === 'granted') {
-        new Notification(notification.title, {
-          body: notification.message,
-          icon: '/logo.png'
-        });
-      }
-      
-      // Play sound
-      playNotificationSound();
-    });
 
-    return () => {
-      socket.off('newNotification');
-    };
-  }
-}, [socket, currentUser]);
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
 
-const playNotificationSound = () => {
-  const audio = new Audio('/notification-sound.mp3');
-  audio.play().catch(() => {});
-};
-
-// Request notification permission
-useEffect(() => {
-  if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission();
-  }
-}, []);
   useEffect(() => {
     if (!token) {
       setLoading(false);
@@ -50,23 +27,36 @@ useEffect(() => {
 
     const initializeApp = async () => {
       try {
-        // Fetch current user
         const userRes = await axios.get(`${API_BASE_URL}/api/current-user`, {
           headers: { Authorization: token }
         });
         setCurrentUser(userRes.data);
+        localStorage.setItem('user', JSON.stringify({
+          name: userRes.data.username,
+          email: userRes.data.email,
+          id: userRes.data.id,
+        }));
 
-        // Create socket and authenticate immediately
-        const newSocket = io(`${API_BASE_URL}`);
-        
+        const newSocket = io(`${API_BASE_URL}`, {
+          transports: ['websocket', 'polling'],
+          reconnection: true,
+        });
+
         newSocket.on('connect', () => {
-          console.log('Socket connected, sending authentication...');
+          setSocketReady(false);
           newSocket.emit('authenticate', token);
         });
 
-        // Set socket immediately (we'll handle authentication separately)
+        newSocket.on('authenticated', () => {
+          setSocketReady(true);
+        });
+
+        newSocket.on('unauthorized', () => {
+          setSocketReady(false);
+        });
+
+        socketRef.current = newSocket;
         setSocket(newSocket);
-        
       } catch (err) {
         console.error('Error initializing app:', err);
         localStorage.removeItem('token');
@@ -78,11 +68,11 @@ useEffect(() => {
     initializeApp();
 
     return () => {
-      if (socket) {
-        socket.disconnect();
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   if (loading) {
@@ -115,8 +105,10 @@ useEffect(() => {
     return <Navigate to="/login" replace />;
   }
 
-  return React.Children.map(children, child => 
-    React.cloneElement(child, { currentUser, socket })
+  return (
+    <AppContext.Provider value={{ currentUser, socket, socketReady }}>
+      <Outlet />
+    </AppContext.Provider>
   );
 }
 

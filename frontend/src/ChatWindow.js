@@ -18,7 +18,7 @@ function formatDateSeparator(dateStr) {
   return d.toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' });
 }
 
-function ChatWindow({ user, messages, onSend }) {
+function ChatWindow({ user, messages, onSend, connected = true, canSend = true }) {
   const [text, setText] = useState("");
   const chatEndRef = useRef();
 
@@ -60,7 +60,7 @@ function ChatWindow({ user, messages, onSend }) {
         </div>
         <div className="chat-header-info">
           <span className="chat-header-name">{user.username}</span>
-          <span className="chat-header-status">Online</span>
+          <span className="chat-header-status">{connected ? 'Online' : 'Connecting…'}</span>
         </div>
         <div className="chat-header-actions">
           <button className="chat-action-btn" title="Voice Call">📞</button>
@@ -115,7 +115,7 @@ function ChatWindow({ user, messages, onSend }) {
 
       {/* Input */}
       <div className="chat-input-area">
-        <MessageInput text={text} setText={setText} onSend={handleSend} />
+        <MessageInput text={text} setText={setText} onSend={handleSend} disabled={!canSend} />
       </div>
     </div>
   );

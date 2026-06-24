@@ -4,9 +4,11 @@ import DiscussionRoomList from "./DiscussionRoomList";
 import RoomChat from "./RoomChat";
 import Layout from "./Layout";
 import axios from "axios";
+import { useApp } from './AppContext';
 import "./DiscussionRoomPage.css";
 
-function DiscussionRoomPage({ currentUser, socket }) {
+function DiscussionRoomPage() {
+  const { currentUser, socket } = useApp();
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [roomDetails, setRoomDetails] = useState(null);
   const [newUserEmail, setNewUserEmail] = useState("");

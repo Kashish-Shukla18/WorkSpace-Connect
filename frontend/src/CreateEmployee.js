@@ -46,7 +46,12 @@ const CreateEmployee = () => {
 
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.post(`${API_BASE_URL}/api/employees`, formData, {
+            const payload = {
+                ...formData,
+                department_id: formData.department_id ? parseInt(formData.department_id, 10) : null,
+                role_id: formData.role_id ? parseInt(formData.role_id, 10) : null,
+            };
+            const response = await axios.post(`${API_BASE_URL}/api/employees`, payload, {
                 headers: { Authorization: token }
             });
 

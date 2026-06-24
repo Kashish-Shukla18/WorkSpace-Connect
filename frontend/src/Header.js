@@ -2,22 +2,29 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Header.css';
 import NotificationBell from './NotificationBell';
+import { useApp } from './AppContext';
 
-const Header = (currentUser) => {
+const Header = () => {
     const navigate = useNavigate();
+    const { currentUser } = useApp();
 
-    const storedUser = localStorage.getItem("user");
-    let user = null;
-    try {
-        user = storedUser ? JSON.parse(storedUser) : null;
-    } catch {
-        user = null;
+    const storedUser = localStorage.getItem('user');
+    let user = currentUser;
+    if (!user && storedUser) {
+        try {
+            user = JSON.parse(storedUser);
+        } catch {
+            user = null;
+        }
     }
 
+    const displayName = user?.username || user?.name || 'Guest';
+    const avatarLetter = displayName.charAt(0).toUpperCase();
+
     const handleLogout = () => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        navigate("/login");
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        navigate('/login');
     };
 
     return (
@@ -29,28 +36,26 @@ const Header = (currentUser) => {
             </div>
 
             <div className="header-center">
-<nav className="nav">
-    <Link to="/dashboard" className="nav-link">Dashboard</Link>
-    <Link to="/projects" className="nav-link">Projects</Link>
-    <Link to="/tasks" className="nav-link">Tasks</Link>
-    <Link to="/employees" className="nav-link">Employees</Link>
-</nav>
+                <nav className="nav">
+                    <Link to="/dashboard" className="nav-link">Dashboard</Link>
+                    <Link to="/projects" className="nav-link">Projects</Link>
+                    <Link to="/tasks" className="nav-link">Tasks</Link>
+                    <Link to="/employees" className="nav-link">Employees</Link>
+                </nav>
             </div>
 
             <div className="header-right">
-                <NotificationBell currentUser={currentUser} />
+                <NotificationBell />
                 <div className="user-menu">
-                    <span className="user-name">Hello, {user ? user.name : "Guest"}</span>
+                    <span className="user-name">Hello, {displayName}</span>
                     <div className="dropdown">
-                        <button className="dropdown-toggle">
-                            <span className="user-avatar">
-                                {user ? user.charAt(0).toUpperCase() : 'U'}
-                            </span>
+                        <button className="dropdown-toggle" type="button">
+                            <span className="user-avatar">{avatarLetter}</span>
                         </button>
                         <div className="dropdown-menu">
                             <Link to="/profile" className="dropdown-item">Profile</Link>
                             <Link to="/settings" className="dropdown-item">Settings</Link>
-                            <button onClick={handleLogout} className="dropdown-item logout">
+                            <button onClick={handleLogout} className="dropdown-item logout" type="button">
                                 Logout
                             </button>
                         </div>

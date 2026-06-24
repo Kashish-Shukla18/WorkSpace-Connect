@@ -1,6 +1,6 @@
 import { API_BASE_URL } from './config';
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import Layout from './Layout';
 import './EmployeeDetails.css';
 import axios from 'axios';
@@ -8,9 +8,11 @@ import axios from 'axios';
 const EmployeeDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const [employee, setEmployee] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const successMsg = location.state?.message || '';
 
     useEffect(() => {
         fetchEmployee();
@@ -83,6 +85,10 @@ const EmployeeDetails = () => {
                         </button>
                     </div>
                 </div>
+
+                {successMsg && (
+                    <div className="employee-success-banner">{successMsg}</div>
+                )}
 
                 <div className="employee-profile">
                     <div className="profile-identity">

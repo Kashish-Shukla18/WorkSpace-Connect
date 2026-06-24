@@ -49,8 +49,10 @@ const SECRET = 'mysecretkey';
 
 // Auth middleware
 const authMiddleware = (req, res, next) => {
-  const token = req.headers['authorization'];
-  if (!token) return res.status(401).json({ error: 'No token provided' });
+  const raw = req.headers['authorization'];
+  if (!raw) return res.status(401).json({ error: 'No token provided' });
+
+  const token = raw.startsWith('Bearer ') ? raw.slice(7) : raw;
 
   jwt.verify(token, SECRET, (err, decoded) => {
     if (err) return res.status(401).json({ error: 'Invalid token' });
@@ -312,6 +314,17 @@ app.post('/tasks', authMiddleware, async (req, res) => {
     const task = result.rows[0];
     console.log("Task created:", task);
 
+    if (assigned_to && Number(assigned_to) !== Number(req.userId)) {
+      await createNotification(
+        assigned_to,
+        'task',
+        'New Task Assigned',
+        `You have been assigned: "${title}"${due_date ? ` (due ${due_date})` : ''}`,
+        task.id,
+        'task'
+      );
+    }
+
     const userResult = await pool.query('SELECT username, email FROM users WHERE id=$1', [assigned_to]);
     if (userResult.rows.length > 0) {
       const assignedUser = userResult.rows[0];
@@ -524,33 +537,61 @@ app.get('/api/employees/:id', authMiddleware, async (req, res) => {
 app.put('/api/employees/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
-    const updates = req.body;
+    const allowedFields = [
+      'employee_id', 'first_name', 'last_name', 'email', 'phone',
+      'date_of_birth', 'gender', 'department_id', 'role_id',
+      'date_of_joining', 'employment_type', 'employment_status',
+      'address', 'city', 'state', 'country', 'postal_code',
+      'emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relation',
+    ];
 
-    const setClause = Object.keys(updates)
-      .map((key, index) => `${key} = $${index + 1}`)
-      .join(', ');
+    const updates = {};
+    for (const key of allowedFields) {
+      if (req.body[key] !== undefined && req.body[key] !== null && req.body[key] !== '') {
+        updates[key] = req.body[key];
+      }
+    }
 
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: 'No valid fields to update' });
+    }
+
+    const keys = Object.keys(updates);
+    const setClause = keys.map((key, index) => `${key} = $${index + 1}`).join(', ');
     const values = Object.values(updates);
-    values.push(id);
-    values.push(req.userId);
+    const idParam = keys.length + 1;
+    const updatedByParam = keys.length + 2;
 
-    const result = await pool.query(`
-            UPDATE employees 
-            SET ${setClause}, updated_by = $${values.length}, updated_at = CURRENT_TIMESTAMP
-            WHERE id = $${values.length - 1}
-            RETURNING *
-        `, values);
+    const result = await pool.query(
+      `UPDATE employees
+       SET ${setClause}, updated_by = $${updatedByParam}, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $${idParam}
+       RETURNING *`,
+      [...values, id, req.userId]
+    );
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Employee not found' });
     }
 
+    const employee = await pool.query(
+      `SELECT e.*, d.name AS department_name, r.title AS role_title
+       FROM employees e
+       LEFT JOIN departments d ON e.department_id = d.id
+       LEFT JOIN roles r ON e.role_id = r.id
+       WHERE e.id = $1`,
+      [id]
+    );
+
     res.json({
       message: 'Employee updated successfully',
-      employee: result.rows[0]
+      employee: employee.rows[0],
     });
   } catch (err) {
-    console.error(err);
+    console.error('Error updating employee:', err);
+    if (err.code === '23505') {
+      return res.status(409).json({ error: 'Employee ID or email already exists' });
+    }
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -1158,31 +1199,43 @@ app.put('/api/notification-preferences', authMiddleware, async (req, res) => {
 });
 
 
-// Notification service functions
-// Modify your notification creation function
+// Notification service — emit helper assigned after Socket.IO starts
+let emitToUserSockets = () => {};
+
 const createNotification = async (userId, type, title, message, relatedId = null, relatedType = null) => {
   try {
-    const result = await pool.query(
-      `INSERT INTO notifications 
-       (user_id, type, title, message, related_id, related_type) 
-       VALUES ($1, $2, $3, $4, $5, $6) 
-       RETURNING *`,
-      [userId, type, title, message, relatedId, relatedType]
-    );
+    let result;
+    try {
+      result = await pool.query(
+        `INSERT INTO notifications
+         (user_id, type, title, message, related_id, related_type)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         RETURNING *`,
+        [userId, type, title, message, relatedId, relatedType]
+      );
+    } catch (dbErr) {
+      if (dbErr.code === '42703') {
+        result = await pool.query(
+          `INSERT INTO notifications (user_id, title, message)
+           VALUES ($1, $2, $3)
+           RETURNING *`,
+          [userId, title, message]
+        );
+      } else {
+        throw dbErr;
+      }
+    }
 
     const notification = result.rows[0];
-
-    // Emit real-time notification
-    if (onlineUsers[userId]) {
-      io.to(onlineUsers[userId]).emit('newNotification', notification);
-      io.to(onlineUsers[userId]).emit('notificationCountUpdate', {
-        count: await getUnreadCount(userId)
-      });
-    }
+    emitToUserSockets(userId, 'newNotification', notification);
+    emitToUserSockets(userId, 'notificationCountUpdate', {
+      count: await getUnreadCount(userId),
+    });
 
     return notification;
   } catch (err) {
-    console.error("Error creating notification:", err);
+    console.error('Error creating notification:', err);
+    return null;
   }
 };
 
@@ -1242,22 +1295,42 @@ const io = new Server(server, {
   }
 });
 
-// Store userId -> socket.id mapping
+// userId -> Set of socket ids (supports multiple tabs / single shared connection)
 let onlineUsers = {};
+
+emitToUserSockets = (userId, event, payload) => {
+  io.to(`user_${Number(userId)}`).emit(event, payload);
+};
 
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
-  // Handle authentication when socket connects
   socket.on("authenticate", (token) => {
     try {
-      const decoded = jwt.verify(token, SECRET);
-      const userId = decoded.id;
-      onlineUsers[userId] = socket.id;
+      const cleanToken = token?.startsWith('Bearer ') ? token.slice(7) : token;
+      const decoded = jwt.verify(cleanToken, SECRET);
+      const userId = Number(decoded.id);
+      if (!userId) {
+        socket.emit("unauthorized", { error: "Invalid token" });
+        return;
+      }
+
+      if (socket.userId && onlineUsers[socket.userId]) {
+        onlineUsers[socket.userId].delete(socket.id);
+        if (onlineUsers[socket.userId].size === 0) {
+          delete onlineUsers[socket.userId];
+        }
+        socket.leave(`user_${socket.userId}`);
+      }
+
+      if (!onlineUsers[userId]) {
+        onlineUsers[userId] = new Set();
+      }
+      onlineUsers[userId].add(socket.id);
       socket.userId = userId;
+      socket.join(`user_${userId}`);
       console.log(`User ${userId} authenticated on socket ${socket.id}`);
 
-      // Emit success event back to client
       socket.emit("authenticated", { userId });
     } catch (err) {
       console.log("Invalid token on socket:", err.message);
@@ -1272,22 +1345,39 @@ io.on("connection", (socket) => {
 
   // Handle sending messages
   socket.on("sendMessage", async ({ receiverId, message }) => {
+    if (!socket.userId) return;
+
+    const rid = Number(receiverId);
+    const text = message?.trim();
+    if (!rid || !text) return;
+
     try {
-      // Save in DB
       const result = await pool.query(
         "INSERT INTO messages (sender_id, receiver_id, message) VALUES ($1, $2, $3) RETURNING *",
-        [socket.userId, receiverId, message]
+        [socket.userId, rid, text]
       );
       const savedMessage = result.rows[0];
 
-      // Send to receiver if online
-      if (onlineUsers[receiverId]) {
-        io.to(onlineUsers[receiverId]).emit("receiveMessage", savedMessage);
+      const senderResult = await pool.query(
+        "SELECT username FROM users WHERE id = $1",
+        [socket.userId]
+      );
+      const senderName = senderResult.rows[0]?.username || "Someone";
+      const preview = text.length > 80 ? `${text.slice(0, 80)}…` : text;
+
+      await createNotification(
+        rid,
+        "message",
+        `New message from ${senderName}`,
+        preview,
+        socket.userId,
+        "dm"
+      );
+
+      emitToUserSockets(rid, "receiveMessage", savedMessage);
+      if (Number(socket.userId) !== rid) {
+        emitToUserSockets(socket.userId, "receiveMessage", savedMessage);
       }
-
-      // Also emit back to sender (for chat UI update)
-      io.to(socket.id).emit("receiveMessage", savedMessage);
-
     } catch (err) {
       console.error("Error saving message:", err);
     }
@@ -1328,7 +1418,14 @@ io.on("connection", (socket) => {
       // Check for mentions
       await checkForMentions(message, roomId, socket.userId);
 
-      // Send notification to all room participants except sender
+      const roomResult = await pool.query(
+        'SELECT name FROM discussion_rooms WHERE id = $1',
+        [roomId]
+      );
+      const roomName = roomResult.rows[0]?.name || `Room ${roomId}`;
+      const senderName = savedMessage.sender_name || 'Someone';
+
+      // Notify all room participants except sender
       const participants = await pool.query(
         'SELECT user_id FROM room_participants WHERE room_id = $1 AND user_id != $2',
         [roomId, socket.userId]
@@ -1338,8 +1435,8 @@ io.on("connection", (socket) => {
         await createNotification(
           participant.user_id,
           'message',
-          'New message',
-          `New message in room ${roomId}`,
+          `New message in #${roomName}`,
+          `${senderName}: ${message.length > 80 ? message.slice(0, 80) + '…' : message}`,
           roomId,
           'room'
         );
@@ -1354,8 +1451,11 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
-    if (socket.userId) {
-      delete onlineUsers[socket.userId];
+    if (socket.userId && onlineUsers[socket.userId]) {
+      onlineUsers[socket.userId].delete(socket.id);
+      if (onlineUsers[socket.userId].size === 0) {
+        delete onlineUsers[socket.userId];
+      }
     }
   });
 });

@@ -111,16 +111,26 @@
   background: var(--elevated-color);
 }
 
-/* ── Employee Cell ── */
-.employee-info {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+/* ── Employee Cell (table row) ── */
+.employees-table td:first-child {
+  min-width: 240px;
 }
 
-.employee-avatar {
-  width: 36px;
-  height: 36px;
+.employees-table-container .employee-info {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.employees-table-container .employee-info.clickable:hover .employee-name {
+  color: var(--accent-color);
+}
+
+.employees-table-container .employee-avatar {
+  width: 40px;
+  height: 40px;
   border-radius: var(--border-radius);
   background: var(--accent-color);
   display: flex;
@@ -134,31 +144,40 @@
   flex-shrink: 0;
 }
 
-.employee-avatar img {
+.employees-table-container .employee-avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.employee-details {
+.employees-table-container .employee-details {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
+  flex: 1;
 }
 
-.employee-name {
+.employees-table-container .employee-name {
   font-weight: 600;
   color: var(--text-primary);
-  font-size: 13px;
+  font-size: 14px;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.employee-email {
+.employees-table-container .employee-email {
   font-size: 12px;
   color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* ── Status Badges ── */
-.status-badge {
+/* ── Status Badges (table only) ── */
+.employees-table-container .status-badge {
   display: inline-flex;
   align-items: center;
   padding: 3px 8px;

@@ -26,83 +26,24 @@ function App() {
         <Route path="/" element={<Navigate to={localStorage.getItem('token') ? "/dashboard" : "/login"} replace />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
-        
-        {/* Protected routes */}
-        <Route path="/dashboard" element={
-          <ProtectedLayout>
-            <Dashboard />
-          </ProtectedLayout>
-        } />
-        <Route path="/add-project" element={
-          <ProtectedLayout>
-            <AddProject />
-          </ProtectedLayout>
-        } />
-        <Route path="/projects" element={
-          <ProtectedLayout>
-            <ProjectsList />
-          </ProtectedLayout>
-        } />
-        <Route path="/create-task" element={
-          <ProtectedLayout>
-            <CreateTask />
-          </ProtectedLayout>
-        } />
-        <Route path="/tasks" element={
-          <ProtectedLayout>
-            <TasksPage />
-          </ProtectedLayout>
-        } />
-        <Route path="/employees" element={
-          <ProtectedLayout>
-            <EmployeesPage />
-          </ProtectedLayout>
-        } />
-        <Route path="/employees/create" element={
-          <ProtectedLayout>
-            <CreateEmployee />
-          </ProtectedLayout>
-        } />
-        <Route path="/employees/:id" element={
-          <ProtectedLayout>
-            <EmployeeDetails />
-          </ProtectedLayout>
-        } />
-        <Route path="/employees/edit/:id" element={
-          <ProtectedLayout>
-            <EditEmployee />
-          </ProtectedLayout>
-        } />
-        <Route path="/calendar" element={
-          <ProtectedLayout>
-            <Calendar />
-          </ProtectedLayout>
-        } />
-        <Route path="/birthday" element={
-          <ProtectedLayout>
-            <BirthDay />
-          </ProtectedLayout>
-        } />
-        <Route path="/chat" element={
-          <ProtectedLayout>
-            <ChatPage />
-          </ProtectedLayout>
-        } />
-        <Route path="/discussion" element={
-          <ProtectedLayout>
-            <DiscussionRoomPage />
-          </ProtectedLayout>
-        } />
-        <Route path="/profile" element={
-          <ProtectedLayout>
-            <Profile />
-          </ProtectedLayout>
-        } />
-        <Route path="/settings" element={
-          <ProtectedLayout>
-            <Settings />
-          </ProtectedLayout>
-        } />
+
+        <Route element={<ProtectedLayout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/add-project" element={<AddProject />} />
+          <Route path="/projects" element={<ProjectsList />} />
+          <Route path="/create-task" element={<CreateTask />} />
+          <Route path="/tasks" element={<TasksPage />} />
+          <Route path="/employees" element={<EmployeesPage />} />
+          <Route path="/employees/create" element={<CreateEmployee />} />
+          <Route path="/employees/:id" element={<EmployeeDetails />} />
+          <Route path="/employees/edit/:id" element={<EditEmployee />} />
+          <Route path="/calendar" element={<Calendar />} />
+          <Route path="/birthday" element={<BirthDay />} />
+          <Route path="/chat" element={<ChatPage />} />
+          <Route path="/discussion" element={<DiscussionRoomPage />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/settings" element={<Settings />} />
+        </Route>
       </Routes>
     </Router>
   );

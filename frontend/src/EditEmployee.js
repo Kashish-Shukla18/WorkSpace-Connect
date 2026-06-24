@@ -76,10 +76,7 @@ const EditEmployee = () => {
             }
 
             const response = await axios.get(`${API_BASE_URL}/api/employees/${id}`, {
-                headers: { 
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
+                headers: { Authorization: token }
             });
             
             const employeeData = response.data.employee;
@@ -160,10 +157,7 @@ const EditEmployee = () => {
             };
 
             const response = await axios.put(`${API_BASE_URL}/api/employees/${id}`, updateData, {
-                headers: { 
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
+                headers: { Authorization: token }
             });
 
             if (response.status === 200) {

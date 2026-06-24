@@ -19,7 +19,16 @@ function Login() {
         try {
             const res = await axios.post(`${API_BASE_URL}/login`, { username, password });
             localStorage.setItem('token', res.data.token);
-            
+
+            const userRes = await axios.get(`${API_BASE_URL}/api/current-user`, {
+              headers: { Authorization: res.data.token },
+            });
+            localStorage.setItem('user', JSON.stringify({
+              name: userRes.data.username,
+              email: userRes.data.email,
+              id: userRes.data.id,
+            }));
+
             navigate('/dashboard');
         } catch (err) {
             setError(err.response?.data?.error || 'Login failed. Please try again.');
